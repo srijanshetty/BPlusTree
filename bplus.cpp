@@ -248,6 +248,7 @@ Node* Node::splitLeaf() {
     for (auto key = keys.begin() + lowerBound; key != keys.end(); ++key) {
         surrogateLeafNode->insertObject(*key);
     }
+    surrogateLeafNode->getKeysFromDisk();
 
     // Resize the current leaf node
     keys.resize(lowerBound);
@@ -297,4 +298,33 @@ Node* insert(Node *root, double key) {
         // Recurse into the tree
         return insert(root->children[position + 1], key);
     }
+}
+
+
+int main() {
+    // Open the configuration file
+    ifstream configFile;
+    configFile.open("./bplustree.config");
+
+    // Read in the pageSize from the configuration file
+    int pageSize = 0;
+    configFile >> pageSize;
+
+    // Compute the number of keys in each node
+    Node::initialize(pageSize);
+
+    Node root = Node();
+    Node *tempRoot = nullptr;
+    for (int i = 0; i < 300; ++i) {
+        cout << "Insert " << i << endl;
+        tempRoot = insert(&root, i);
+        if (tempRoot != nullptr) {
+            root = *tempRoot;
+        }
+    }
+
+    // Clean up on exit
+    system("rm leaves/* && touch leaves/DUMMY");
+
+    return 0;
 }

@@ -1,21 +1,16 @@
 CC=g++-4.8 -std=c++11
-CFLAGS=-Wall -c
+CFLAGS=-Wall
 DEBUG=-g
 
 .PHONY: clean-leaves clean-all
 
-all: driver clean-leaves
+all: tree clean-leaves
 
-driver: driver.cpp
-	$(CC) $(DEBUG) driver.cpp -o driver.out
-
-driver.cpp: bplus.o
-
-bplus.o: bplus.cpp
-	$(CC) $(CFLAGS) $(DEBUG) bplus.cpp
+tree: bplus.cpp
+	$(CC) $(DEBUG) bplus.cpp -o tree.out
 
 clean-all: clean-leaves
-	rm *.o driver.out
+	rm *.o *.out
 
 clean-leaves:
 	rm leaves/*
