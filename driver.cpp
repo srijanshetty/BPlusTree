@@ -38,9 +38,12 @@ int main() {
     Node::initialize(pageSize);
 
     Node root = Node();
-    for (int i = 0; i < 128; ++i) {
+    for (int i = 0; i < 300; ++i) {
         cout << "Insert " << i << endl;
-        insert(&root, i);
+        Node *tempRoot = insert(&root, i);
+        if (tempRoot != nullptr) {
+            root = *tempRoot;
+        }
     }
 
     // Clean up on exit
