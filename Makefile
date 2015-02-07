@@ -1,9 +1,9 @@
 CC=g++-4.8 -std=c++0x
 CFLAGS=-Wall -c
 
-.PHONY: clean
+.PHONY: clean-leaves clean-all
 
-all: driver
+all: driver clean-leaves
 
 driver: driver.cpp
 	$(CC) driver.cpp -o driver.out
@@ -13,9 +13,9 @@ driver.cpp: bplus.o
 bplus.o: bplus.cpp
 	$(CC) $(CFLAGS) bplus.cpp
 
-clean-all: clean
-	rm *.o
+clean-all: clean-leaves
+	rm *.o driver.out
 
-clean:
-	rm driver.out leaves/*
+clean-leaves:
+	rm leaves/*
 	touch leaves/DUMMY
