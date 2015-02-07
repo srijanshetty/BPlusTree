@@ -13,5 +13,9 @@ driver.cpp: bplus.o
 bplus.o: bplus.cpp
 	$(CC) $(CFLAGS) bplus.cpp
 
+clean-all: clean
+	rm *.o
+
 clean:
-	rm *.o driver.out leaves/*
+	rm driver.out leaves/*
+	touch leaves/DUMMY
