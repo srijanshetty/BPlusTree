@@ -20,6 +20,7 @@
  */
 
 #define PREFIX "leaves/leaf_"
+#define DEBUG false
 
 #include <iostream>
 #include <math.h>
@@ -81,7 +82,7 @@ class Node {
     void insertObject(double key);
 
     // Insert an internal node into the tree
-    void insertNode(double key, Node *newChild);
+    void insertNode(double key, Node *leftChild, Node *rightChild);
 
     // Split the current Leaf Node
     void splitLeaf();
@@ -183,14 +184,36 @@ void Node::insertObject(double key) {
     getKeysFromDisk();
 }
 
-void Node::insertNode(double key, Node *newChild) {
+void Node::insertNode(double key, Node *leftChild, Node *rightChild) {
     int position = getKeyPosition(key);
 
     // insert the new key to keys
     keys.insert(keys.begin() + position, key);
 
     // insert the newChild
-    children.insert(children.begin() + position + 1, newChild);
+    children.insert(children.begin() + position + 1, rightChild);
+
+#ifndef DEBUG
+    cout << endl;
+    cout << "Base Node : ";
+    for (auto key : keys) {
+        cout << key << " ";
+    }
+    cout << endl;
+
+    // Print them out
+    cout << "LeftNode : ";
+    for (auto key : leftChild->keys) {
+        cout << key << " ";
+    }
+    cout << endl;
+
+    cout << "RightNode : ";
+    for (auto key : rightChild->keys) {
+        cout << key << " ";
+    }
+    cout << endl;
+#endif
 
     // If this overflows, we move again upward
     if ((int)keys.size() > upperBound) {
@@ -199,12 +222,14 @@ void Node::insertNode(double key, Node *newChild) {
 }
 
 void Node::splitInternal() {
+#ifndef DEBUG
     cout << endl;
     cout << "Base Node : ";
     for (auto key : keys) {
         cout << key << " ";
     }
     cout << endl;
+#endif
 
     // Create a surrogate internal node
     Node *surrogateInternalNode = new Node();
@@ -217,6 +242,7 @@ void Node::splitInternal() {
     }
     keys.resize(lowerBound);
 
+#ifndef DEBUG
     // Print them out
     cout << "First InternalNode : ";
     for (auto key : keys) {
@@ -231,10 +257,12 @@ void Node::splitInternal() {
     cout << endl;
 
     cout << "Split At " << startPoint << endl;
+#endif
 
     // Fix up the pointers
     for (auto child = children.begin() + lowerBound + 1; child != children.end(); ++child) {
         surrogateInternalNode->children.push_back(*child);
+        (*child)->parent = surrogateInternalNode;
     }
     children.resize(lowerBound + 1);
 
@@ -243,7 +271,7 @@ void Node::splitInternal() {
         surrogateInternalNode->parent = parent;
 
         // Now we push up the splitting one level
-        parent->insertNode(startPoint, surrogateInternalNode);
+        parent->insertNode(startPoint, this, surrogateInternalNode);
     } else {
         // Create a new parent node
         Node *newParent = new Node();
@@ -266,6 +294,7 @@ void Node::splitInternal() {
 }
 
 void Node::splitLeaf() {
+#ifndef DEBUG
     cout << endl;
     cout << "Base Node : ";
 
@@ -273,6 +302,7 @@ void Node::splitLeaf() {
         cout << key << " ";
     }
     cout << endl;
+#endif
 
     // Create a surrogate leaf node
     Node *surrogateLeafNode = new Node();
@@ -283,6 +313,7 @@ void Node::splitLeaf() {
     // Resize the current leaf node
     keys.resize(lowerBound);
 
+#ifndef DEBUG
     // Print them out
     cout << "First Leaf : ";
     for (auto key : keys) {
@@ -295,13 +326,14 @@ void Node::splitLeaf() {
         cout << key << " ";
     }
     cout << endl;
+#endif
 
     if (parent != nullptr) {
         // Assign parents
         surrogateLeafNode->parent = parent;
 
         // Now we push up the splitting one level
-        parent->insertNode(surrogateLeafNode->keys.front(), surrogateLeafNode);
+        parent->insertNode(surrogateLeafNode->keys.front(), this, surrogateLeafNode);
     } else {
         // Create a new parent node
         Node *newParent = new Node();
@@ -355,7 +387,7 @@ int main() {
     Node::initialize(pageSize);
 
     bRoot = new Node();
-    for (int i = 0; i < 30; ++i) {
+    for (int i = 0; i < 150; ++i) {
         insert(bRoot, i);
     }
 
