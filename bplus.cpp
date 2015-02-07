@@ -25,14 +25,20 @@
 #include <math.h>
 #include <fstream>
 #include <string>
+#include <stdlib.h>
+#include <queue>
+#include <vector>
+#include <climits>
+
+using namespace std;
 
 namespace BPlusTree {
 
-    // Properties shared by both internal nodes and leaf nodes
-    class BaseNode {
-        protected:
+    class Node {
         bool isLeaf;
-        int size;
+        vector<pair<double, Node> > keys;
+
+        // LeafNode properties
 
         // Static data
         static int lowerKeyBound;
@@ -40,51 +46,71 @@ namespace BPlusTree {
         static int leafCount;
 
         public:
-        BaseNode() {
-            size = 0;
+        string leafFileName;
+        Node() {
+            // Initially every node is a leaf
             isLeaf = true;
+
+            // Exit if the lowerBoundKey is not defined
+            if (lowerKeyBound == 0) {
+                cout << "LowerKeyBound not defined";
+                exit(1);
+            }
+
+            // LeafNode properties
+            leafFileName = PREFIX + to_string(leafCount++);
+        }
+
+        Node(double key) {
+            // Call the main constructor
+            Node();
+
+            // Insert the key into the leaf node
+            insertIntoLeaf(key);
         }
 
         // Function to compute number of keys
         static void computeNumberOfKeys(int pageSize) {
             // Compute the parameters for the Bplus tree
-            int nodeSize = sizeof(new BaseNode());
+            int nodeSize = sizeof(new Node());
             int keySize = sizeof(double);
             lowerKeyBound = floor((pageSize - nodeSize) / (2 * (keySize + nodeSize)));
             upperKeyBound = 2 * lowerKeyBound;
         }
+
+        // Insert a key into keys
+        void insertIntoLeaf(double key) {
+            // Write to memory in case of leaf
+            if (isLeaf) {
+                ofstream leafFile;
+                leafFile.open(leafFileName, ios::binary|ios::app);
+                leafFile.write((char *) &key, sizeof(key));
+                leafFile.close();
+
+                // keys.push(make_pair(key, NULL));
+            }
+        }
+
+        // Read all the keys from file into memory
+        void getKeys() {
+            // Do nothing for internal node
+            if (isLeaf) {
+                ifstream leafFile;
+                leafFile.open(leafFileName, ios::binary|ios::in);
+
+                // Fix reading last line multiple times
+                while (!leafFile.eof()) {
+                    double y;
+                    leafFile.read((char *) &y, sizeof(double));
+                    cout << y << endl;
+                }
+            }
+        }
     };
 
     // Initialize static variables
-    int BaseNode::lowerKeyBound = 0;
-    int BaseNode::upperKeyBound = 0;
-    int BaseNode::leafCount = 0;
-
-    class InternalNode: public BaseNode {
-        double *keys;
-        InternalNode *children;
-
-        public:
-            InternalNode() : BaseNode() {
-                isLeaf = false;
-                keys = new double[upperKeyBound];
-                children = new InternalNode[upperKeyBound + 1];
-            }
-    };
-
-    class LeafNode: public BaseNode {
-        std::string leafFileName;
-
-        public:
-            LeafNode() : BaseNode() {
-                leafFileName = PREFIX + std::to_string(leafCount);
-
-                // Create a new file
-                std::ofstream leafFile;
-                leafFile.open(leafFileName, std::ios::binary|std::ios::out);
-                leafFile << "yo";
-                std::cout << leafFileName;
-            }
-    };
+    int Node::lowerKeyBound = 0;
+    int Node::upperKeyBound = 0;
+    int Node::leafCount = 0;
 }
 

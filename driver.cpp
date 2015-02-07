@@ -35,9 +35,15 @@ int main() {
     configFile >> pageSize;
 
     // Compute the number of keys in each node
-    BaseNode::computeNumberOfKeys(pageSize);
+    Node::computeNumberOfKeys(pageSize);
 
-    LeafNode();
+    Node root = Node();
+    root.insertIntoLeaf(10);
+    root.insertIntoLeaf(14);
+    root.getKeys();
+
+    // Clean up on exit
+    system("rm leaves/* && touch leaves/DUMMY");
 
     return 0;
 }
