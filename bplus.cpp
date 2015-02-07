@@ -83,8 +83,8 @@ class Node {
     // Insert an internal node into the tree
     void insertNode(double key, Node *newChild);
 
-    // Split the current Leaf Node
-    void splitLeaf();
+    // Split the current Leaf Node, return the root if modified
+    Node* splitLeaf();
 
     // Split the current internal Node
     void splitInternal();
@@ -94,9 +94,6 @@ class Node {
 int Node::lowerBound = 0;
 int Node::upperBound = 0;
 int Node::leafCount = 0;
-
-// The root node
-Node *bRoot = nullptr;
 
 Node::Node() {
     // Initially the parent is NULL
@@ -211,7 +208,7 @@ void Node::splitInternal() {
     keys.resize(lowerBound);
 }
 
-void Node::splitLeaf() {
+Node* Node::splitLeaf() {
     // Create a surrogate leaf node
     Node *surrogateLeafNode = new Node();
     for (auto key = keys.begin() + lowerBound; key != keys.end(); ++key) {
@@ -227,6 +224,8 @@ void Node::splitLeaf() {
 
         // Now we push up the splitting one level
         parent->insertNode(surrogateLeafNode->keys.front(), surrogateLeafNode);
+
+        return nullptr;
     } else {
         // Create a new parent node
         Node *newParent = new Node();
@@ -244,33 +243,28 @@ void Node::splitLeaf() {
         newParent->children.push_back(surrogateLeafNode);
 
         // Reset the root node
-        // bRoot = newParent;
+        return newParent;
     }
 }
 
-void initialize(int pageSize) {
-    // Compute parameters
-    Node::initialize(pageSize);
-
-    // Initialize the root
-    bRoot = new Node();
-}
-
-void insert(Node root, double key) {
+void insert(Node *root, double key) {
     // If the root is a leaf, we can directly insert
-    if (root.isLeaf()) {
-        root.getKeysFromDisk();
+    if (root->isLeaf()) {
+        root->getKeysFromDisk();
 
-        if (root.size() >= root.upperBound) {
-            root.splitLeaf();
+        if (root->size() >= root->upperBound) {
+            Node* tempRoot = root->splitLeaf();
+            if (tempRoot != nullptr) {
+                root = tempRoot;
+            }
         } else {
-            root.insertObject(key);
+            root->insertObject(key);
         }
     } else {
         // We traverse the tree
-        int position = root.getKeyPosition(key);
+        // int position = root->getKeyPosition(key);
 
         // Recurse into the tree
-        insert(*root.children[position + 1], key);
+        // insert(*root.children[position + 1], key);
     }
 }

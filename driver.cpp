@@ -35,12 +35,12 @@ int main() {
     configFile >> pageSize;
 
     // Compute the number of keys in each node
-    initialize(pageSize);
+    Node::initialize(pageSize);
 
-    vector<int> range;
+    Node root = Node();
     for (int i = 0; i < 128; ++i) {
         cout << "Insert " << i << endl;
-        insert(*bRoot, i);
+        insert(&root, i);
     }
 
     // Clean up on exit
