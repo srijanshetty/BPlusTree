@@ -21,9 +21,9 @@
 
 #include "./bplus.cpp"
 #include <fstream>
+#include <vector>
 
 using namespace std;
-using namespace BPlusTree;
 
 int main() {
     // Open the configuration file
@@ -35,16 +35,16 @@ int main() {
     configFile >> pageSize;
 
     // Compute the number of keys in each node
-    Node::computeNumberOfKeys(pageSize);
+    initialize(pageSize);
 
-    Node root = Node();
-    root.insertIntoLeaf(10);
-    root.insertIntoLeaf(14);
-    root.getKeys();
+    vector<int> range;
+    for (int i = 0; i < 128; ++i) {
+        cout << "Insert " << i << endl;
+        insert(*bRoot, i);
+    }
 
     // Clean up on exit
     system("rm leaves/* && touch leaves/DUMMY");
 
     return 0;
 }
-
