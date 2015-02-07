@@ -80,20 +80,22 @@ class Node {
     // Insert object into disk
     void insertObject(double key);
 
-    // Insert an internal node into the tree, return the root if modified
-    Node* insertNode(double key, Node *newChild);
+    // Insert an internal node into the tree
+    void insertNode(double key, Node *newChild);
 
-    // Split the current Leaf Node, return the root if modified
-    Node* splitLeaf();
+    // Split the current Leaf Node
+    void splitLeaf();
 
-    // Split the current internal Node, return the root if modified
-    Node* splitInternal();
+    // Split the current internal Node
+    void splitInternal();
 };
 
 // Initialize static variables
 int Node::lowerBound = 0;
 int Node::upperBound = 0;
 int Node::leafCount = 0;
+
+Node *bRoot = nullptr;
 
 Node::Node() {
     // Initially the parent is NULL
@@ -116,6 +118,8 @@ void Node::initialize(int pageSize) {
     int nodeSize = sizeof(new Node());
     int keySize = sizeof(double);
     lowerBound = floor((pageSize - nodeSize) / (2 * (keySize + nodeSize)));
+
+    lowerBound = 5;
     upperBound = 2 * lowerBound;
 }
 
@@ -174,9 +178,12 @@ void Node::insertObject(double key) {
     leafFile.open(leafFileName, ios::binary|ios::app);
     leafFile.write((char *) &key, sizeof(key));
     leafFile.close();
+
+    // TODO Load keys
+    getKeysFromDisk();
 }
 
-Node* Node::insertNode(double key, Node *newChild) {
+void Node::insertNode(double key, Node *newChild) {
     int position = getKeyPosition(key);
 
     // insert the new key to keys
@@ -186,15 +193,18 @@ Node* Node::insertNode(double key, Node *newChild) {
     children.insert(children.begin() + position + 1, newChild);
 
     // If this overflows, we move again upward
-    if ((int)keys.size() >= upperBound) {
-        return splitInternal();
-    } else {
-        return nullptr;
+    if ((int)keys.size() > upperBound) {
+        splitInternal();
     }
 }
 
-Node* Node::splitInternal() {
-    cout << "Split Internal" << endl;
+void Node::splitInternal() {
+    cout << endl;
+    cout << "Base Node : ";
+    for (auto key : keys) {
+        cout << key << " ";
+    }
+    cout << endl;
 
     // Create a surrogate internal node
     Node *surrogateInternalNode = new Node();
@@ -207,6 +217,21 @@ Node* Node::splitInternal() {
     }
     keys.resize(lowerBound);
 
+    // Print them out
+    cout << "First InternalNode : ";
+    for (auto key : keys) {
+        cout << key << " ";
+    }
+    cout << endl;
+
+    cout << "Second InternalNode : ";
+    for (auto key : surrogateInternalNode->keys) {
+        cout << key << " ";
+    }
+    cout << endl;
+
+    cout << "Split At " << startPoint << endl;
+
     // Fix up the pointers
     for (auto child = children.begin() + lowerBound + 1; child != children.end(); ++child) {
         surrogateInternalNode->children.push_back(*child);
@@ -218,7 +243,7 @@ Node* Node::splitInternal() {
         surrogateInternalNode->parent = parent;
 
         // Now we push up the splitting one level
-        return parent->insertNode(startPoint, surrogateInternalNode);
+        parent->insertNode(startPoint, surrogateInternalNode);
     } else {
         // Create a new parent node
         Node *newParent = new Node();
@@ -236,29 +261,47 @@ Node* Node::splitInternal() {
         newParent->children.push_back(surrogateInternalNode);
 
         // Reset the root node
-        return newParent;
+        bRoot = newParent;
     }
 }
 
-Node* Node::splitLeaf() {
-    cout << "Split Leaf" << endl;
+void Node::splitLeaf() {
+    cout << endl;
+    cout << "Base Node : ";
+
+    for (auto key : keys) {
+        cout << key << " ";
+    }
+    cout << endl;
 
     // Create a surrogate leaf node
     Node *surrogateLeafNode = new Node();
     for (auto key = keys.begin() + lowerBound; key != keys.end(); ++key) {
         surrogateLeafNode->insertObject(*key);
     }
-    surrogateLeafNode->getKeysFromDisk();
 
     // Resize the current leaf node
     keys.resize(lowerBound);
+
+    // Print them out
+    cout << "First Leaf : ";
+    for (auto key : keys) {
+        cout << key << " ";
+    }
+    cout << endl;
+
+    cout << "Second Leaf : ";
+    for (auto key : surrogateLeafNode->keys) {
+        cout << key << " ";
+    }
+    cout << endl;
 
     if (parent != nullptr) {
         // Assign parents
         surrogateLeafNode->parent = parent;
 
         // Now we push up the splitting one level
-        return parent->insertNode(surrogateLeafNode->keys.front(), surrogateLeafNode);
+        parent->insertNode(surrogateLeafNode->keys.front(), surrogateLeafNode);
     } else {
         // Create a new parent node
         Node *newParent = new Node();
@@ -276,30 +319,28 @@ Node* Node::splitLeaf() {
         newParent->children.push_back(surrogateLeafNode);
 
         // Reset the root node
-        return newParent;
+        bRoot = newParent;
     }
 }
 
-Node* insert(Node *root, double key) {
+void insert(Node *root, double key) {
     // If the root is a leaf, we can directly insert
     if (root->isLeaf()) {
-        root->getKeysFromDisk();
+        // Insert object
+        root->insertObject(key);
 
-        if (root->size() >= root->upperBound) {
-            return root->splitLeaf();
-        } else {
-            root->insertObject(key);
-            return nullptr;
+        // Split if required
+        if (root->size() > root->upperBound) {
+            root->splitLeaf();
         }
     } else {
         // We traverse the tree
         int position = root->getKeyPosition(key);
 
         // Recurse into the tree
-        return insert(root->children[position + 1], key);
+        insert(root->children[position], key);
     }
 }
-
 
 int main() {
     // Open the configuration file
@@ -313,14 +354,9 @@ int main() {
     // Compute the number of keys in each node
     Node::initialize(pageSize);
 
-    Node root = Node();
-    Node *tempRoot = nullptr;
-    for (int i = 0; i < 300; ++i) {
-        cout << "Insert " << i << endl;
-        tempRoot = insert(&root, i);
-        if (tempRoot != nullptr) {
-            root = *tempRoot;
-        }
+    bRoot = new Node();
+    for (int i = 0; i < 30; ++i) {
+        insert(bRoot, i);
     }
 
     // Clean up on exit
