@@ -512,10 +512,11 @@ int main() {
     for (int i = 0; i < 10; ++i) {
         insert(bRoot, 140);
         insert(bRoot, 240);
+        insert(bRoot, 340);
     }
 
-    serialize(bRoot);
     pointSearch(bRoot, 140);
+    pointSearch(bRoot, 240);
 
     // Clean up on exit
     system("rm leaves/* && touch leaves/DUMMY");
