@@ -29,12 +29,21 @@
 #include <stdlib.h>
 #include <queue>
 #include <vector>
-#include <climits>
+#include <limits>
 #include <algorithm>
 
 using namespace std;
 
 namespace BPlusTree {
+    // A generic compare function for pairs of numbers
+    template<typename T>
+        class compare {
+            public:
+                bool operator() (pair<T, double> T1, pair<T, double> T2) {
+                    return T1.second > T2.second;
+                }
+        };
+
     class Node {
         // Static data
         static int leafCount;
@@ -531,6 +540,77 @@ namespace BPlusTree {
         // Call windowSearch internally
         windowSearch(root, lowerBound, upperBound);
     }
+
+    // kNN query
+    void kNNsearch(Node *root, double center, long k) {
+        // A priority_queue to keep the elements ordered
+        priority_queue< pair<Node*, double>, vector< pair<Node*, double> >, compare<Node *> > q;
+
+        // Insert the root into the queue
+        q.push(make_pair(root, 0));
+
+        // Vector to store the answers
+        vector<double> answers;
+
+        while(!q.empty() && (int)answers.size() <= k) {
+            Node *currentNode = q.top().first;
+            q.pop();
+
+            if (currentNode->isLeaf()) {
+                // All the keys for a leaf node are answers
+                for (auto key : currentNode->keys) {
+                    answers.push_back(key);
+                }
+            } else {
+                if (currentNode->keys.size() >= 1) {
+                    double distance;
+                    vector<double> distances;
+
+                    // For the first key
+                    if (center < currentNode->keys.front()) {
+                        distances.push_back(0);
+                    } else {
+                        distances.push_back(abs(center - currentNode->keys.front()));
+                    }
+
+                    // For middle keys
+                    for (int i = 1; i < (int)currentNode->keys.size(); ++i) {
+                        if (center < currentNode->keys[i - 1]) {
+                            distance = abs(center - currentNode->keys[i - 1]);
+                        } else if (center > currentNode->keys[i]) {
+                            distance = abs(center - currentNode->keys[i]);
+                        } else {
+                            distance = 0;
+                        }
+
+                        distances.push_back(distance);
+                    }
+
+                    // For the last key
+                    if (currentNode->keys.size() > 1) {
+                        if (center > currentNode->keys.back()) {
+                            distances.push_back(0);
+                        } else {
+                            distances.push_back(abs(center - currentNode->keys.back()));
+                        }
+                    }
+
+                    // Now we push the children along with the computed distances
+                    for (int i = 0; i < (int)distances.size(); ++i) {
+                        q.push(make_pair(currentNode->children[i], distances[i]));
+                    }
+                }
+            }
+        }
+
+        // Sort the obtained answers
+        sort(answers.begin(), answers.end(), [&](double T1, double T2) { return (abs(T1 - center) < abs(T2 - center)); });
+
+        // Print the answers
+        for (int i = 0; i < k; ++i) {
+            cout << answers[i] << endl;
+        }
+    }
 }
 
 using namespace BPlusTree;
@@ -556,8 +636,9 @@ int main() {
     }
 
     serialize(bRoot);
-    windowSearch(bRoot, 0 , 10);
-    rangeSearch(bRoot, 0 , 5);
+    // windowSearch(bRoot, 0 , 10);
+    // rangeSearch(bRoot, 0 , 5);
+    kNNsearch(bRoot, 2, 3);
 
     // Clean up on exit
     system("rm leaves/* && touch leaves/DUMMY");
