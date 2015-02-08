@@ -130,7 +130,7 @@ namespace BPlusTree {
         int keySize = sizeof(double);
         lowerBound = floor((pageSize - nodeSize) / (2 * (keySize + nodeSize)));
 
-        lowerBound = 5;
+        lowerBound = 2;
         upperBound = 2 * lowerBound;
     }
 
