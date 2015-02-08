@@ -20,7 +20,7 @@
  */
 
 #define PREFIX "leaves/leaf_"
-#define DEBUG
+// #define DEBUG
 
 #include <iostream>
 #include <math.h>
@@ -493,6 +493,44 @@ namespace BPlusTree {
             pointSearch(root->children[position], searchKey);
         }
     }
+
+    // window search
+    void windowSearch(Node *root, double lowerLimit, double upperLimit) {
+        // If the root is a leaf, we can directly search
+        if (root->isLeaf()) {
+            root->getKeysFromDisk();
+
+            // Print all nodes in the current leaf which satisfy the criteria
+            for (auto key : root->keys) {
+                if (key >=lowerLimit && key <= upperLimit) {
+                    cout << key << endl;
+                }
+            }
+
+            // Check nextleaf for the condition
+            if (root->nextLeaf != nullptr
+                    && root->nextLeaf->keys.front() >= lowerLimit
+                    && root->nextLeaf->keys.front() <= upperLimit) {
+                windowSearch(root->nextLeaf, lowerLimit, upperLimit);
+            }
+        } else {
+            // We traverse the tree
+            int position = root->getKeyPosition(lowerLimit);
+
+            // Recurse into the tree
+            windowSearch(root->children[position], lowerLimit, upperLimit);
+        }
+
+    }
+
+    //rangesearch
+    void rangeSearch(Node *root, double center, double range) {
+        double upperBound = center + range;
+        double lowerBound = (center - range >= 0) ? center - range : 0;
+
+        // Call windowSearch internally
+        windowSearch(root, lowerBound, upperBound);
+    }
 }
 
 using namespace BPlusTree;
@@ -509,14 +547,17 @@ int main() {
     // Initialize the BPlusTree module
     initialize(pageSize);
 
-    for (int i = 0; i < 10; ++i) {
-        insert(bRoot, 140);
-        insert(bRoot, 240);
-        insert(bRoot, 340);
+    for (int i = 0; i < 20; ++i) {
+        insert(bRoot, 2 * i);
     }
 
-    pointSearch(bRoot, 140);
-    pointSearch(bRoot, 240);
+    for (int i = 19; i >= 0; --i) {
+        insert(bRoot, 3 * i);
+    }
+
+    serialize(bRoot);
+    windowSearch(bRoot, 0 , 10);
+    rangeSearch(bRoot, 0 , 5);
 
     // Clean up on exit
     system("rm leaves/* && touch leaves/DUMMY");
