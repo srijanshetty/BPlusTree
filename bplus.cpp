@@ -469,6 +469,30 @@ namespace BPlusTree {
     }
 
     // Point search in a BPlusTree
+    void pointSearch(Node *root, double searchKey) {
+        // If the root is a leaf, we can directly search
+        if (root->isLeaf()) {
+            root->getKeysFromDisk();
+
+            // Print all nodes in the current leaf
+            for (auto key : root->keys) {
+                if (key == searchKey) {
+                    cout << key << endl;
+                }
+            }
+
+            // Check nextleaf for same node
+            if (root->nextLeaf != nullptr && root->nextLeaf->keys.front() == searchKey) {
+                pointSearch(root->nextLeaf, searchKey);
+            }
+        } else {
+            // We traverse the tree
+            int position = root->getKeyPosition(searchKey);
+
+            // Recurse into the tree
+            pointSearch(root->children[position], searchKey);
+        }
+    }
 }
 
 using namespace BPlusTree;
@@ -485,12 +509,13 @@ int main() {
     // Initialize the BPlusTree module
     initialize(pageSize);
 
-    for (int i = 0; i < 150; ++i) {
-        insert(bRoot, i);
+    for (int i = 0; i < 10; ++i) {
+        insert(bRoot, 140);
+        insert(bRoot, 240);
     }
 
     serialize(bRoot);
-    // pointSearch(bRoot, 140);
+    pointSearch(bRoot, 140);
 
     // Clean up on exit
     system("rm leaves/* && touch leaves/DUMMY");
