@@ -58,6 +58,9 @@ namespace BPlusTree {
         // The parent of the Node
         Node *parent;
 
+        // The next leaf
+        Node *nextLeaf;
+
         // Basic initialization
         Node();
 
@@ -102,6 +105,7 @@ namespace BPlusTree {
     Node::Node() {
         // Initially the parent is NULL
         parent = nullptr;
+        nextLeaf = nullptr;
 
         // Initially every node is a leaf
         leaf = true;
@@ -328,6 +332,9 @@ namespace BPlusTree {
         }
         cout << endl;
 #endif
+
+        // Add a pointer to the nextLeaf
+        nextLeaf = surrogateLeafNode;
 
         if (parent != nullptr) {
             // Assign parents
