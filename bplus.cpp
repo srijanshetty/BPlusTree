@@ -213,6 +213,7 @@ namespace BPlusTree {
 
 #ifdef DEBUG
         cout << endl;
+        cout << "InsertNode : " << endl;
         cout << "Base Node : ";
         for (auto key : keys) {
             cout << key << " ";
@@ -242,6 +243,7 @@ namespace BPlusTree {
     void Node::splitInternal() {
 #ifdef DEBUG
         cout << endl;
+        cout << "SplitInternal : " << endl;
         cout << "Base Node : ";
         for (auto key : keys) {
             cout << key << " ";
@@ -314,6 +316,7 @@ namespace BPlusTree {
     void Node::splitLeaf() {
 #ifdef DEBUG
         cout << endl;
+        cout << "SplitLeaf : " << endl;
         cout << "Base Node : ";
 
         for (auto key : keys) {
@@ -442,6 +445,11 @@ namespace BPlusTree {
             if (root->size() > root->upperBound) {
                 root->splitLeaf();
             }
+
+#ifdef DEBUG
+            // Serialize
+            serialize(bRoot);
+#endif
         } else {
             // We traverse the tree
             int position = root->getKeyPosition(key);
