@@ -130,6 +130,7 @@ namespace BPlusTree {
     }
 
     int Node::getKeyPosition(double key) {
+        // If keys are empty, return
         if (keys.size() == 0) {
             return 0;
         }
