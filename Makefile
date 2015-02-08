@@ -1,13 +1,16 @@
 CC=g++-4.8 -std=c++11
-CFLAGS=-Wall
+CFLAGS=-Wall -c
 DEBUG=-g
 
 .PHONY: clean-leaves clean-all
 
-all: tree clean-leaves
+all: tree.out clean-leaves
 
-tree: bplus.cpp
-	$(CC) $(DEBUG) bplus.cpp -o tree.out
+tree.out: bplus.o
+	$(CC) $(DEBUG) bplus.o -o tree.out
+
+bplus.o: bplus.cpp
+	$(CC) $(CFLAGS) bplus.cpp
 
 clean-all: clean-leaves
 	rm *.o *.out
