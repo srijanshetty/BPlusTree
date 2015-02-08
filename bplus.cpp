@@ -365,6 +365,51 @@ namespace BPlusTree {
         bRoot = new Node();
     }
 
+    // Serialize the tree
+    void serialize(Node *root) {
+        // Prettify
+        cout << endl << endl;
+
+        queue< pair<Node *, char> > previousLevel;
+        previousLevel.push(make_pair(root, 'N'));
+
+        Node *iterator;
+        char type;
+        while (!previousLevel.empty()) {
+            queue< pair<Node *, char> > nextLevel;
+
+            while (!previousLevel.empty()) {
+                // Get the front and pop
+                iterator = previousLevel.front().first;
+                type = previousLevel.front().second;
+                previousLevel.pop();
+
+                // If it a seperator, print and move ahead
+                if (type == '|') {
+                    cout << "|| ";
+                    continue;
+                }
+
+                // Print all the keys
+                for (auto key : iterator->keys) {
+                    cout << key << " ";
+                }
+
+                // Enqueue all the children
+                for (auto child : iterator->children) {
+                    nextLevel.push(make_pair(child, 'N'));
+
+                    // Insert a marker to indicate end of child
+                    nextLevel.push(make_pair(nullptr, '|'));
+                }
+            }
+
+            // Seperate different levels
+            cout << endl << endl;
+            previousLevel = nextLevel;
+        }
+    }
+
     // Insert a key into the BPlusTree
     void insert(Node *root, double key) {
         // If the root is a leaf, we can directly insert
@@ -405,6 +450,9 @@ int main() {
     for (int i = 0; i < 150; ++i) {
         insert(bRoot, i);
     }
+
+    serialize(bRoot);
+    // pointSearch(bRoot, 140);
 
     // Clean up on exit
     system("rm leaves/* && touch leaves/DUMMY");
