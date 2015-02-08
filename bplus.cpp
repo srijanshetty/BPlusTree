@@ -82,6 +82,9 @@ namespace BPlusTree {
         // Read all the keys from disk to memory
         void getKeysFromDisk();
 
+        // Save keys to disk
+        void saveKeysToDisk();
+
         // Insert object into disk
         void insertObject(double key);
 
@@ -136,22 +139,31 @@ namespace BPlusTree {
         }
 
         // Find the original position of the key
-        int position = -1;
-        if (key < keys.front()) {
-            position = 0;
-        } else {
-            for (int i = 1; i < (int)keys.size(); ++i) {
-                if (keys[i -1] < key && key <= keys[i]) {
-                    position = i;
-                }
-            }
+        if (key <= keys.front()) {
+            return 0;
+        }
 
-            if (position == -1) {
-                position = keys.size();
+        for (int i = 1; i < (int)keys.size(); ++i) {
+            if (keys[i -1] < key && key <= keys[i]) {
+                return i;
             }
         }
 
-        return position;
+        return keys.size();
+    }
+
+    void Node::saveKeysToDisk() {
+        // Create a binary file
+        ofstream leafFile;
+        leafFile.open(leafFileName, ios::binary|ios::out);
+
+        // Read the key and enter it into keys
+        for (auto key : keys) {
+            leafFile.write((char *) &key, sizeof(key));
+        }
+
+        // Close the file
+        leafFile.close();
     }
 
     void Node::getKeysFromDisk() {
@@ -316,8 +328,9 @@ namespace BPlusTree {
             surrogateLeafNode->insertObject(*key);
         }
 
-        // Resize the current leaf node
+        // Resize the current leaf node and save keys to disk
         keys.resize(lowerBound);
+        saveKeysToDisk();
 
 #ifdef DEBUG
         // Print them out
