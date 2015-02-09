@@ -124,12 +124,6 @@ namespace BPlusTree {
             // Print node information
             void printNode();
 
-            // Read all the keys from disk to memory
-            void getKeysFromDisk();
-
-            // Save keys to disk
-            void saveKeysToDisk();
-
             // Insert object into disk
             void insertObject(double key);
 
@@ -347,58 +341,14 @@ namespace BPlusTree {
         }
     }
 
-    void Node::saveKeysToDisk() {
-        // Create a binary file
-        ofstream leafFile;
-        leafFile.open(getFileName(), ios::binary|ios::out);
-
-        // sort the keys before commiting to memory
-        sort(keys.begin(), keys.end());
-
-        // Read the key and enter it into keys
-        for (auto key : keys) {
-            leafFile.write((char *) &key, sizeof(key));
-        }
-
-        // Close the file
-        leafFile.close();
-    }
-
-    void Node::getKeysFromDisk() {
-        // Clear the exisitng keys
-        keys.clear();
-
-        // Create a binary file
-        ifstream leafFile;
-        leafFile.open(getFileName(), ios::binary|ios::in);
-
-        // Read the key and enter it into keys
-        double key;
-        while (!leafFile.eof()) {
-            leafFile.read((char *) &key, sizeof(key));
-
-            /* Common Error in reading files */
-            if (!leafFile) break;
-
-            keys.push_back(key);
-        }
-
-        // TODO : Move this to only one place
-        // sort the keys
-        sort(keys.begin(), keys.end());
-
-        // Close the file
-        leafFile.close();
-    }
-
     void Node::insertObject(double key) {
-        ofstream leafFile;
-        leafFile.open(getFileName(), ios::binary|ios::app);
-        leafFile.write((char *) &key, sizeof(key));
-        leafFile.close();
+        int position = getKeyPosition(key);
 
-        // Load keys to avoid stale keys
-        getKeysFromDisk();
+        // insert the new key to keys
+        keys.insert(keys.begin() + position, key);
+
+        // Commit the new node back into memory
+        commitToDisk();
     }
 
     void Node::insertNode(double key, Node *leftChild, Node *rightChild) {
@@ -532,7 +482,7 @@ namespace BPlusTree {
 
         // Resize the current leaf node and save keys to disk
         keys.resize(lowerBound);
-        saveKeysToDisk();
+        commitToDisk();
 
 #ifdef DEBUG
         // Print them out
@@ -660,7 +610,7 @@ namespace BPlusTree {
     void pointSearch(Node *root, double searchKey) {
         // If the root is a leaf, we can directly search
         if (root->isLeaf()) {
-            root->getKeysFromDisk();
+            root->readFromDisk();
 
             // Print all nodes in the current leaf
             for (auto key : root->keys) {
@@ -686,7 +636,7 @@ namespace BPlusTree {
     void windowSearch(Node *root, double lowerLimit, double upperLimit) {
         // If the root is a leaf, we can directly search
         if (root->isLeaf()) {
-            root->getKeysFromDisk();
+            root->readFromDisk();
 
             // Print all nodes in the current leaf which satisfy the criteria
             for (auto key : root->keys) {
