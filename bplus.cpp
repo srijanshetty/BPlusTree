@@ -75,9 +75,9 @@ namespace BPlusTree {
             static long fileCount;              // Count of all files
 
         public:
-            static int lowerBound;
-            static int upperBound;
-            static int pageSize;
+            static long lowerBound;
+            static long upperBound;
+            static long pageSize;
 
         private:
             long fileIndex;                     // Name of file to store contents
@@ -101,7 +101,7 @@ namespace BPlusTree {
             Node();
 
             // Given a fileIndex, read it
-            Node(long _fileIndex, int _fileCount);
+            Node(long _fileIndex);
 
             // Check if leaf
             bool isLeaf() { return leaf; }
@@ -113,13 +113,13 @@ namespace BPlusTree {
             void setToInternalNode() { leaf = false; }
 
             // Return the size of keys
-            int size() { return keys.size(); }
+            long size() { return keys.size(); }
 
             // Initialize the for the tree
             static void initialize();
 
             // Return the position of a key in keys
-            int getKeyPosition(double key);
+            long getKeyPosition(double key);
 
             // Commit node to disk
             void commitToDisk();
@@ -147,9 +147,9 @@ namespace BPlusTree {
     };
 
     // Initialize static variables
-    int Node::lowerBound = 0;
-    int Node::upperBound = 0;
-    int Node::pageSize = 0;
+    long Node::lowerBound = 0;
+    long Node::upperBound = 0;
+    long Node::pageSize = 0;
     long Node::fileCount = 0;
 
     Node *bRoot = nullptr;
@@ -178,9 +178,9 @@ namespace BPlusTree {
         fileIndex = fileCount++;
     }
 
-    Node::Node(long _fileIndex, int _fileCount) {
+    Node::Node(long _fileIndex) {
         // Reset the fileCount
-        fileCount = _fileCount;
+        fileCount = _fileIndex + 10000;
 
         // Exit if the lowerBoundKey is not defined
         if (lowerBound == 0) {
@@ -208,17 +208,17 @@ namespace BPlusTree {
         pageSize = pageSize - headerSize;
 
         // Compute parameters
-        int nodeSize = sizeof(fileIndex);
-        int keySize = sizeof(keyType);
+        long nodeSize = sizeof(fileIndex);
+        long keySize = sizeof(keyType);
         lowerBound = floor((pageSize - nodeSize) / (2 * (keySize + nodeSize)));
 
         // TODO : Change this back to default
-        lowerBound = 15;
+        lowerBound = 5;
         upperBound = 2 * lowerBound;
         pageSize = pageSize + headerSize;
     }
 
-    int Node::getKeyPosition(double key) {
+    long Node::getKeyPosition(double key) {
         // If keys are empty, return
         if (keys.size() == 0) {
             return 0;
@@ -229,7 +229,7 @@ namespace BPlusTree {
             return 0;
         }
 
-        for (int i = 1; i < (int)keys.size(); ++i) {
+        for (long i = 1; i < (long)keys.size(); ++i) {
             if (keys[i -1] < key && key <= keys[i]) {
                 return i;
             }
@@ -240,7 +240,7 @@ namespace BPlusTree {
 
     void Node::commitToDisk() {
         // Create a character buffer which will be written to disk
-        int location = 0;
+        long location = 0;
         char buffer[pageSize];
 
         // Store the fileIndex
@@ -264,7 +264,7 @@ namespace BPlusTree {
         location += sizeof(nextLeafIndex);
 
         // Store the number of keys
-        int numKeys = keys.size();
+        long numKeys = keys.size();
         memcpy(buffer + location, &numKeys, sizeof(numKeys));
         location += sizeof(numKeys);
 
@@ -291,7 +291,7 @@ namespace BPlusTree {
 
     void Node::readFromDisk() {
         // Create a character buffer which will be written to disk
-        int location = 0;
+        long location = 0;
         char buffer[pageSize];
 
         // Open the binary file ane read into memory
@@ -321,14 +321,14 @@ namespace BPlusTree {
         location += sizeof(nextLeafIndex);
 
         // Retrieve the number of keys
-        int numKeys;
+        long numKeys;
         memcpy((char *) &numKeys, buffer + location, sizeof(numKeys));
         location += sizeof(numKeys);
 
         // Retrieve the keys
         keys.clear();
         double key;
-        for (int i = 0; i < numKeys; ++i) {
+        for (long i = 0; i < numKeys; ++i) {
             memcpy((char *) &key, buffer + location, sizeof(key));
             location += sizeof(key);
             keys.push_back(key);
@@ -338,7 +338,7 @@ namespace BPlusTree {
         if (!leaf) {
             childIndices.clear();
             // long childIndex;
-            // for (int i = 0; i < numKeys + 1; ++i) {
+            // for (long i = 0; i < numKeys + 1; ++i) {
                 // memcpy((char *) &childIndex, buffer + location, sizeof(childIndex));
                 // location += sizeof(childIndex);
             // childIndices.push_back(childIndex);
@@ -411,7 +411,7 @@ namespace BPlusTree {
 
 
     void Node::insertObject(double key) {
-        int position = getKeyPosition(key);
+        long position = getKeyPosition(key);
 
         // insert the new key to keys
         keys.insert(keys.begin() + position, key);
@@ -421,7 +421,7 @@ namespace BPlusTree {
     }
 
     void Node::insertNode(double key, Node *leftChild, Node *rightChild) {
-        int position = getKeyPosition(key);
+        long position = getKeyPosition(key);
 
         // insert the new key to keys
         keys.insert(keys.begin() + position, key);
@@ -453,7 +453,7 @@ namespace BPlusTree {
 #endif
 
         // If this overflows, we move again upward
-        if ((int)keys.size() > upperBound) {
+        if ((long)keys.size() > upperBound) {
             splitInternal();
         }
     }
@@ -649,7 +649,7 @@ namespace BPlusTree {
             }
         } else {
             // We traverse the tree
-            int position = root->getKeyPosition(searchKey);
+            long position = root->getKeyPosition(searchKey);
 
             // Recurse into the tree
             pointSearch(root->children[position], searchKey);
@@ -705,7 +705,7 @@ namespace BPlusTree {
         // Vector to store the answers
         vector<double> answers;
 
-        while(!q.empty() && (int)answers.size() <= k) {
+        while(!q.empty() && (long)answers.size() <= k) {
             Node *currentNode = q.top().first;
             q.pop();
 
@@ -727,7 +727,7 @@ namespace BPlusTree {
                     }
 
                     // For middle keys
-                    for (int i = 1; i < (int)currentNode->keys.size(); ++i) {
+                    for (long i = 1; i < (long)currentNode->keys.size(); ++i) {
                         if (center < currentNode->keys[i - 1]) {
                             distance = abs(center - currentNode->keys[i - 1]);
                         } else if (center > currentNode->keys[i]) {
@@ -749,7 +749,7 @@ namespace BPlusTree {
                     }
 
                     // Now we push the children along with the computed distances
-                    for (int i = 0; i < (int)distances.size(); ++i) {
+                    for (long i = 0; i < (long)distances.size(); ++i) {
                         q.push(make_pair(currentNode->children[i], distances[i]));
                     }
                 }
@@ -760,7 +760,7 @@ namespace BPlusTree {
         sort(answers.begin(), answers.end(), [&](double T1, double T2) { return (abs(T1 - center) < abs(T2 - center)); });
 
         // Print the answers
-        for (int i = 0; i < k; ++i) {
+        for (long i = 0; i < k; ++i) {
             cout << answers[i] << endl;
         }
     }
@@ -775,8 +775,12 @@ int main() {
     // Create a new tree
     bRoot = new Node();
 
-    for (int i = 0; i < 40; ++i) {
+    for (long i = 0; i < 40; ++i) {
         insert(bRoot, 2 * i);
+    }
+
+    for (long i = 40; i > 0; --i) {
+        insert(bRoot, 3 * i);
     }
 
     bRoot->serialize();
