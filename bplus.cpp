@@ -46,13 +46,13 @@ namespace BPlusTree {
 
     class Node {
         // Static data
-        static int leafCount;
+        static long fileCount;
 
         // Type of leaf
         bool leaf;
 
-        // LeafNode properties
-        string leafFileName;
+        // Name of file to store contents
+        long fileIndex;
 
         public:
 
@@ -61,6 +61,7 @@ namespace BPlusTree {
         static int upperBound;
 
         // Keys and their associated children
+        double keyType;            // Dummy to indicate container base
         vector<double> keys;
         vector<Node *> children;
 
@@ -76,6 +77,9 @@ namespace BPlusTree {
 
         // Check if leaf
         bool isLeaf() { return leaf; }
+
+        // Get the file name
+        string getFileName() { return PREFIX + to_string(fileIndex); }
 
         // set to internalNode
         void setToInternalNode() { leaf = false; }
@@ -111,7 +115,7 @@ namespace BPlusTree {
     // Initialize static variables
     int Node::lowerBound = 0;
     int Node::upperBound = 0;
-    int Node::leafCount = 0;
+    long Node::fileCount = 0;
 
     Node *bRoot = nullptr;
 
@@ -131,14 +135,15 @@ namespace BPlusTree {
         }
 
         // LeafNode properties
-        leafFileName = PREFIX + to_string(leafCount++);
+        fileIndex = fileCount++;
     }
 
     void Node::initialize(int pageSize) {
-        int nodeSize = sizeof(new Node());
-        int keySize = sizeof(double);
+        int nodeSize = sizeof(fileIndex);
+        int keySize = sizeof(keyType);
         lowerBound = floor((pageSize - nodeSize) / (2 * (keySize + nodeSize)));
 
+        // TODO : Change this back to default
         lowerBound = 2;
         upperBound = 2 * lowerBound;
     }
@@ -166,7 +171,10 @@ namespace BPlusTree {
     void Node::saveKeysToDisk() {
         // Create a binary file
         ofstream leafFile;
-        leafFile.open(leafFileName, ios::binary|ios::out);
+        leafFile.open(getFileName(), ios::binary|ios::out);
+
+        // sort the keys before commiting to memory
+        sort(keys.begin(), keys.end());
 
         // Read the key and enter it into keys
         for (auto key : keys) {
@@ -183,7 +191,7 @@ namespace BPlusTree {
 
         // Create a binary file
         ifstream leafFile;
-        leafFile.open(leafFileName, ios::binary|ios::in);
+        leafFile.open(getFileName(), ios::binary|ios::in);
 
         // Read the key and enter it into keys
         double key;
@@ -196,6 +204,7 @@ namespace BPlusTree {
             keys.push_back(key);
         }
 
+        // TODO : Move this to only one place
         // sort the keys
         sort(keys.begin(), keys.end());
 
@@ -205,7 +214,7 @@ namespace BPlusTree {
 
     void Node::insertObject(double key) {
         ofstream leafFile;
-        leafFile.open(leafFileName, ios::binary|ios::app);
+        leafFile.open(getFileName(), ios::binary|ios::app);
         leafFile.write((char *) &key, sizeof(key));
         leafFile.close();
 
