@@ -39,8 +39,12 @@
    */
 
 
-#define PREFIX "leaves/leaf_"
+// Configuration parameters
 #define CONFIG_FILE "./bplustree.config"
+
+// Constants
+#define PREFIX "leaves/leaf_"
+#define DEFAULT_LOCATION -1
 // #define DEBUG
 
 #include <iostream>
@@ -80,12 +84,12 @@ namespace BPlusTree {
             bool leaf;                          // Type of leaf
 
         public:
-            long parentName;
-            long nextLeafName;
-            long previousLeafName;
+            long parentIndex;
+            long nextLeafIndex;
+            long previousLeafIndex;
             double keyType;                     // Dummy to indicate container base
             vector<double> keys;
-            vector<long> childNames;            // FileIndexes of the child pointers
+            vector<long> childIndices;          // FileIndices of the children
 
             Node *parent;
             Node *nextLeaf;
@@ -156,10 +160,10 @@ namespace BPlusTree {
         nextLeaf = nullptr;
         previousLeaf = nullptr;
 
-        // Initially all the fileNames are -1
-        parentName = -1;
-        nextLeafName = -1;
-        previousLeafName = -1;
+        // Initially all the fileNames are DEFAULT_LOCATION
+        parentIndex = DEFAULT_LOCATION;
+        nextLeafIndex = DEFAULT_LOCATION;
+        previousLeafIndex = DEFAULT_LOCATION;
 
         // Initially every node is a leaf
         leaf = true;
@@ -198,9 +202,9 @@ namespace BPlusTree {
         // Save some place in the file for the header
         long headerSize = sizeof(fileIndex)
             + sizeof(leaf)
-            + sizeof(parentName)
-            + sizeof(nextLeafName)
-            + sizeof(previousLeafName);
+            + sizeof(parentIndex)
+            + sizeof(nextLeafIndex)
+            + sizeof(previousLeafIndex);
         pageSize = pageSize - headerSize;
 
         // Compute parameters
@@ -248,16 +252,16 @@ namespace BPlusTree {
         location += sizeof(leaf);
 
         // Add parent to memory
-        memcpy(buffer + location, &parentName, sizeof(parentName));
-        location += sizeof(parentName);
+        memcpy(buffer + location, &parentIndex, sizeof(parentIndex));
+        location += sizeof(parentIndex);
 
         // Add the previous leaf node
-        memcpy(buffer + location, &previousLeafName, sizeof(nextLeafName));
-        location += sizeof(nextLeafName);
+        memcpy(buffer + location, &previousLeafIndex, sizeof(nextLeafIndex));
+        location += sizeof(nextLeafIndex);
 
         // Add the next leaf node
-        memcpy(buffer + location, &nextLeafName, sizeof(nextLeafName));
-        location += sizeof(nextLeafName);
+        memcpy(buffer + location, &nextLeafIndex, sizeof(nextLeafIndex));
+        location += sizeof(nextLeafIndex);
 
         // Store the number of keys
         int numKeys = keys.size();
@@ -272,9 +276,9 @@ namespace BPlusTree {
 
         // Add the child pointers to memory
         if (!leaf) {
-            // for (auto childName : childNames) {
-                // memcpy(buffer + location, &childName, sizeof(childName));
-                // location += sizeof(childName);
+            // for (auto childIndex : childIndices) {
+                // memcpy(buffer + location, &childIndex, sizeof(childIndex));
+                // location += sizeof(childIndex);
             // }
         }
 
@@ -304,17 +308,17 @@ namespace BPlusTree {
         memcpy((char *) &leaf, buffer + location, sizeof(leaf));
         location += sizeof(leaf);
 
-        // Retrieve the parentName
-        memcpy((char *) &parentName, buffer + location, sizeof(parentName));
-        location += sizeof(parentName);
+        // Retrieve the parentIndex
+        memcpy((char *) &parentIndex, buffer + location, sizeof(parentIndex));
+        location += sizeof(parentIndex);
 
-        // Retrieve the previousLeafName
-        memcpy((char *) &previousLeafName, buffer + location, sizeof(previousLeafName));
-        location += sizeof(previousLeafName);
+        // Retrieve the previousLeafIndex
+        memcpy((char *) &previousLeafIndex, buffer + location, sizeof(previousLeafIndex));
+        location += sizeof(previousLeafIndex);
 
-        // Retrieve the nextLeafName
-        memcpy((char *) &nextLeafName, buffer + location, sizeof(nextLeafName));
-        location += sizeof(nextLeafName);
+        // Retrieve the nextLeafIndex
+        memcpy((char *) &nextLeafIndex, buffer + location, sizeof(nextLeafIndex));
+        location += sizeof(nextLeafIndex);
 
         // Retrieve the number of keys
         int numKeys;
@@ -332,12 +336,12 @@ namespace BPlusTree {
 
         // Retrieve childPointers
         if (!leaf) {
-            childNames.clear();
-            // long childName;
+            childIndices.clear();
+            // long childIndex;
             // for (int i = 0; i < numKeys + 1; ++i) {
-                // memcpy((char *) &childName, buffer + location, sizeof(childName));
-                // location += sizeof(childName);
-            // childNames.push_back(childName);
+                // memcpy((char *) &childIndex, buffer + location, sizeof(childIndex));
+                // location += sizeof(childIndex);
+            // childIndices.push_back(childIndex);
             // }
         }
     }
@@ -345,9 +349,9 @@ namespace BPlusTree {
     void Node::printNode() {
         cout << fileIndex << endl;
         cout << leaf << endl;
-        cout << parentName << endl;
-        cout << previousLeafName << endl;
-        cout << nextLeafName << endl;
+        cout << parentIndex << endl;
+        cout << previousLeafIndex << endl;
+        cout << nextLeafIndex << endl;
         cout << keys.size() << endl;
 
         // Print keys
@@ -356,8 +360,8 @@ namespace BPlusTree {
         }
 
         // Print the name of the child
-        for (auto childName : childNames) {
-            cout << childName << endl;
+        for (auto childIndex : childIndices) {
+            cout << childIndex << endl;
         }
     }
 
