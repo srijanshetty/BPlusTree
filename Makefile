@@ -4,13 +4,15 @@ DEBUG=-g
 
 .PHONY: clean-leaves clean-all
 
-all: tree.out clean-leaves
+all: tree.out
+
+fresh: tree.out clean-leaves
 
 tree.out: bplus.o
 	$(CC) $(DEBUG) bplus.o -o tree.out
 
 bplus.o: bplus.cpp
-	$(CC) $(CFLAGS) bplus.cpp
+	$(CC) $(CFLAGS) $(DEBUG) bplus.cpp
 
 clean-all: clean-leaves
 	rm *.o *.out
