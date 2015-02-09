@@ -20,6 +20,7 @@
  */
 
 #define PREFIX "leaves/leaf_"
+#define CONFIG_FILE "./bplustree.config"
 // #define DEBUG
 
 #include <iostream>
@@ -45,32 +46,40 @@ namespace BPlusTree {
         };
 
     class Node {
-        // Static data
-        static long fileCount;
-
-        // Type of leaf
-        bool leaf;
-
-        // Name of file to store contents
-        long fileIndex;
+        private:
+        static long fileCount;              // Count of all files
 
         public:
-
-        // Bounds
         static int lowerBound;
         static int upperBound;
+        static int pageSize;
+        static int headerSize;              // Buffersize when reading and writing
 
-        // Keys and their associated children
-        double keyType;            // Dummy to indicate container base
+        /* Strcuture of file
+           fileIndex
+           leaf
+           nextLeaf
+           previousLeaf
+           parent
+           key1     pointer1
+           key2     pointer2
+           ...
+           keyn     pointern
+       */
+
+        private:
+        long fileIndex;                     // Name of file to store contents
+        bool leaf;                          // Type of leaf
+
+        public:
+        Node *nextLeaf;
+        Node *previousLeaf;
+        Node *parent;
+        double keyType;                     // Dummy to indicate container base
         vector<double> keys;
         vector<Node *> children;
 
-        // The parent of the Node
-        Node *parent;
-
-        // The next leaf
-        Node *nextLeaf;
-        Node *previousLeaf;
+        public:
 
         // Basic initialization
         Node();
@@ -88,10 +97,16 @@ namespace BPlusTree {
         int size() { return keys.size(); }
 
         // Initialize the for the tree
-        static void initialize(int pageSize);
+        static void initialize();
 
         // Return the position of a key in keys
         int getKeyPosition(double key);
+
+        // Commit node to disk
+        void commitToDisk();
+
+        // Read from the disk into memory
+        void readFromDisk();
 
         // Read all the keys from disk to memory
         void getKeysFromDisk();
@@ -115,6 +130,8 @@ namespace BPlusTree {
     // Initialize static variables
     int Node::lowerBound = 0;
     int Node::upperBound = 0;
+    int Node::pageSize = 0;
+    int Node::headerSize = 0;
     long Node::fileCount = 0;
 
     Node *bRoot = nullptr;
@@ -138,14 +155,27 @@ namespace BPlusTree {
         fileIndex = fileCount++;
     }
 
-    void Node::initialize(int pageSize) {
+    void Node::initialize() {
+        // Read in the pageSize from the configuration file
+        ifstream configFile;
+        configFile.open(CONFIG_FILE);
+        configFile >> pageSize;
+
+        // Compute parameters
         int nodeSize = sizeof(fileIndex);
         int keySize = sizeof(keyType);
         lowerBound = floor((pageSize - nodeSize) / (2 * (keySize + nodeSize)));
 
         // TODO : Change this back to default
-        lowerBound = 2;
+        lowerBound = 15;
         upperBound = 2 * lowerBound;
+
+        // Size of the buffer to be read
+        headerSize = sizeof(fileIndex)
+                    + sizeof(leaf)
+                    + sizeof(nextLeaf)
+                    + sizeof(previousLeaf)
+                    + sizeof(parent);
     }
 
     int Node::getKeyPosition(double key) {
@@ -407,15 +437,6 @@ namespace BPlusTree {
         }
     }
 
-    // Initialize the BPlusTree
-    void initialize(int pageSize) {
-        // Compute the number of keys in each node
-        Node::initialize(pageSize);
-
-        // Intialize the root
-        bRoot = new Node();
-    }
-
     // Serialize the tree
     void serialize(Node *root) {
         // Prettify
@@ -625,16 +646,11 @@ namespace BPlusTree {
 using namespace BPlusTree;
 
 int main() {
-    // Open the configuration file
-    ifstream configFile;
-    configFile.open("./bplustree.config");
-
-    // Read in the pageSize from the configuration file
-    int pageSize = 0;
-    configFile >> pageSize;
-
     // Initialize the BPlusTree module
-    initialize(pageSize);
+    Node::initialize();
+
+    // Create a new tree
+    bRoot = new Node();
 
     for (int i = 0; i < 20; ++i) {
         insert(bRoot, 2 * i);
