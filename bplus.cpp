@@ -93,9 +93,11 @@ namespace BPlusTree {
             vector<Node *> children;
 
         public:
-
             // Basic initialization
             Node();
+
+            // Given a fileIndex, read it
+            Node(long _fileIndex, int _fileCount);
 
             // Check if leaf
             bool isLeaf() { return leaf; }
@@ -170,6 +172,21 @@ namespace BPlusTree {
 
         // LeafNode properties
         fileIndex = fileCount++;
+    }
+
+    Node::Node(long _fileIndex, int _fileCount) {
+        // Reset the fileCount
+        fileCount = _fileCount;
+
+        // Exit if the lowerBoundKey is not defined
+        if (lowerBound == 0) {
+            cout << "LowerKeyBound not defined";
+            exit(1);
+        }
+
+        // Load the current node from disk
+        fileIndex = _fileIndex;
+        readFromDisk();
     }
 
     void Node::initialize() {
