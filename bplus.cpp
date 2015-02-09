@@ -257,10 +257,12 @@ namespace BPlusTree {
         }
 
         // Add the child pointers to memory
-        // for (auto childName : childNames) {
-            // memcpy(buffer + location, &childName, sizeof(childName));
-            // location += sizeof(childName);
-        // }
+        if (!leaf) {
+            // for (auto childName : childNames) {
+                // memcpy(buffer + location, &childName, sizeof(childName));
+                // location += sizeof(childName);
+            // }
+        }
 
         // Create a binary file and write to memory
         ofstream leafFile;
@@ -315,13 +317,15 @@ namespace BPlusTree {
         }
 
         // Retrieve childPointers
-        childNames.clear();
-        // long childName;
-        // for (int i = 0; i < numKeys + 1; ++i) {
-            // memcpy((char *) &childName, buffer + location, sizeof(childName));
-            // location += sizeof(childName);
+        if (!leaf) {
+            childNames.clear();
+            // long childName;
+            // for (int i = 0; i < numKeys + 1; ++i) {
+                // memcpy((char *) &childName, buffer + location, sizeof(childName));
+                // location += sizeof(childName);
             // childNames.push_back(childName);
-        // }
+            // }
+        }
     }
 
     void Node::printNode() {
