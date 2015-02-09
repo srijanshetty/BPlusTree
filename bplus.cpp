@@ -276,10 +276,10 @@ namespace BPlusTree {
 
         // Add the child pointers to memory
         if (!leaf) {
-            // for (auto childIndex : childIndices) {
-                // memcpy(buffer + location, &childIndex, sizeof(childIndex));
-                // location += sizeof(childIndex);
-            // }
+            for (auto childIndex : childIndices) {
+                memcpy(buffer + location, &childIndex, sizeof(childIndex));
+                location += sizeof(childIndex);
+            }
         }
 
         // Create a binary file and write to memory
@@ -337,12 +337,12 @@ namespace BPlusTree {
         // Retrieve childPointers
         if (!leaf) {
             childIndices.clear();
-            // long childIndex;
-            // for (long i = 0; i < numKeys + 1; ++i) {
-                // memcpy((char *) &childIndex, buffer + location, sizeof(childIndex));
-                // location += sizeof(childIndex);
-            // childIndices.push_back(childIndex);
-            // }
+            long childIndex;
+            for (long i = 0; i < numKeys + 1; ++i) {
+                memcpy((char *) &childIndex, buffer + location, sizeof(childIndex));
+                location += sizeof(childIndex);
+            childIndices.push_back(childIndex);
+            }
         }
     }
 
