@@ -124,6 +124,9 @@ namespace BPlusTree {
             // Print node information
             void printNode();
 
+            // Serialize the subtree
+            void serialize();
+
             // Insert object into disk
             void insertObject(double key);
 
@@ -341,6 +344,51 @@ namespace BPlusTree {
         }
     }
 
+    void Node::serialize() {
+        // Prettify
+        cout << endl << endl;
+
+        queue< pair<Node *, char> > previousLevel;
+        previousLevel.push(make_pair(this, 'N'));
+
+        Node *iterator;
+        char type;
+        while (!previousLevel.empty()) {
+            queue< pair<Node *, char> > nextLevel;
+
+            while (!previousLevel.empty()) {
+                // Get the front and pop
+                iterator = previousLevel.front().first;
+                type = previousLevel.front().second;
+                previousLevel.pop();
+
+                // If it a seperator, print and move ahead
+                if (type == '|') {
+                    cout << "|| ";
+                    continue;
+                }
+
+                // Print all the keys
+                for (auto key : iterator->keys) {
+                    cout << key << " ";
+                }
+
+                // Enqueue all the children
+                for (auto child : iterator->children) {
+                    nextLevel.push(make_pair(child, 'N'));
+
+                    // Insert a marker to indicate end of child
+                    nextLevel.push(make_pair(nullptr, '|'));
+                }
+            }
+
+            // Seperate different levels
+            cout << endl << endl;
+            previousLevel = nextLevel;
+        }
+    }
+
+
     void Node::insertObject(double key) {
         int position = getKeyPosition(key);
 
@@ -536,51 +584,6 @@ namespace BPlusTree {
         }
     }
 
-    // Serialize the tree
-    void serialize(Node *root) {
-        // Prettify
-        cout << endl << endl;
-
-        queue< pair<Node *, char> > previousLevel;
-        previousLevel.push(make_pair(root, 'N'));
-
-        Node *iterator;
-        char type;
-        while (!previousLevel.empty()) {
-            queue< pair<Node *, char> > nextLevel;
-
-            while (!previousLevel.empty()) {
-                // Get the front and pop
-                iterator = previousLevel.front().first;
-                type = previousLevel.front().second;
-                previousLevel.pop();
-
-                // If it a seperator, print and move ahead
-                if (type == '|') {
-                    cout << "|| ";
-                    continue;
-                }
-
-                // Print all the keys
-                for (auto key : iterator->keys) {
-                    cout << key << " ";
-                }
-
-                // Enqueue all the children
-                for (auto child : iterator->children) {
-                    nextLevel.push(make_pair(child, 'N'));
-
-                    // Insert a marker to indicate end of child
-                    nextLevel.push(make_pair(nullptr, '|'));
-                }
-            }
-
-            // Seperate different levels
-            cout << endl << endl;
-            previousLevel = nextLevel;
-        }
-    }
-
     // Insert a key into the BPlusTree
     void insert(Node *root, double key) {
         // If the root is a leaf, we can directly insert
@@ -595,7 +598,7 @@ namespace BPlusTree {
 
 #ifdef DEBUG
             // Serialize
-            serialize(bRoot);
+            bRoot->serialize();
 #endif
         } else {
             // We traverse the tree
@@ -751,21 +754,17 @@ int main() {
     // Create a new tree
     bRoot = new Node();
 
-    for (int i = 0; i < 20; ++i) {
+    for (int i = 0; i < 40; ++i) {
         insert(bRoot, 2 * i);
     }
 
-    serialize(bRoot);
+    bRoot->serialize();
     // windowSearch(bRoot, 0 , 10);
     // rangeSearch(bRoot, 0 , 5);
     // kNNsearch(bRoot, 2, 3);
 
     // Clean up on exit
     // system("rm leaves/* && touch leaves/DUMMY");
-
-    bRoot->commitToDisk();
-    bRoot->readFromDisk();
-    bRoot->printNode();
 
     return 0;
 }
