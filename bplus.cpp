@@ -19,6 +19,26 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+/* Structure of file
+   -----------------
+   fileIndex
+   leaf
+   parent
+   nextLeaf
+   previousLeaf
+   keySize
+   key1
+   key2
+   ...
+   keyn
+   child1
+   child2
+   ...
+   child (n+1)
+   ------------------
+   */
+
+
 #define PREFIX "leaves/leaf_"
 #define CONFIG_FILE "./bplustree.config"
 // #define DEBUG
@@ -27,6 +47,7 @@
 #include <math.h>
 #include <fstream>
 #include <string>
+#include <cstring>
 #include <stdlib.h>
 #include <queue>
 #include <vector>
@@ -47,91 +68,85 @@ namespace BPlusTree {
 
     class Node {
         private:
-        static long fileCount;              // Count of all files
+            static long fileCount;              // Count of all files
 
         public:
-        static int lowerBound;
-        static int upperBound;
-        static int pageSize;
-        static int headerSize;              // Buffersize when reading and writing
-
-        /* Strcuture of file
-           fileIndex
-           leaf
-           nextLeaf
-           previousLeaf
-           parent
-           key1     pointer1
-           key2     pointer2
-           ...
-           keyn     pointern
-       */
+            static int lowerBound;
+            static int upperBound;
+            static int pageSize;
 
         private:
-        long fileIndex;                     // Name of file to store contents
-        bool leaf;                          // Type of leaf
+            long fileIndex;                     // Name of file to store contents
+            bool leaf;                          // Type of leaf
 
         public:
-        Node *nextLeaf;
-        Node *previousLeaf;
-        Node *parent;
-        double keyType;                     // Dummy to indicate container base
-        vector<double> keys;
-        vector<Node *> children;
+            long parentName;
+            long nextLeafName;
+            long previousLeafName;
+            double keyType;                     // Dummy to indicate container base
+            vector<double> keys;
+            vector<long> childNames;            // FileIndexes of the child pointers
+
+            Node *parent;
+            Node *nextLeaf;
+            Node *previousLeaf;
+            vector<Node *> children;
 
         public:
 
-        // Basic initialization
-        Node();
+            // Basic initialization
+            Node();
 
-        // Check if leaf
-        bool isLeaf() { return leaf; }
+            // Check if leaf
+            bool isLeaf() { return leaf; }
 
-        // Get the file name
-        string getFileName() { return PREFIX + to_string(fileIndex); }
+            // Get the file name
+            string getFileName() { return PREFIX + to_string(fileIndex); }
 
-        // set to internalNode
-        void setToInternalNode() { leaf = false; }
+            // set to internalNode
+            void setToInternalNode() { leaf = false; }
 
-        // Return the size of keys
-        int size() { return keys.size(); }
+            // Return the size of keys
+            int size() { return keys.size(); }
 
-        // Initialize the for the tree
-        static void initialize();
+            // Initialize the for the tree
+            static void initialize();
 
-        // Return the position of a key in keys
-        int getKeyPosition(double key);
+            // Return the position of a key in keys
+            int getKeyPosition(double key);
 
-        // Commit node to disk
-        void commitToDisk();
+            // Commit node to disk
+            void commitToDisk();
 
-        // Read from the disk into memory
-        void readFromDisk();
+            // Read from the disk into memory
+            void readFromDisk();
 
-        // Read all the keys from disk to memory
-        void getKeysFromDisk();
+            // Print node information
+            void printNode();
 
-        // Save keys to disk
-        void saveKeysToDisk();
+            // Read all the keys from disk to memory
+            void getKeysFromDisk();
 
-        // Insert object into disk
-        void insertObject(double key);
+            // Save keys to disk
+            void saveKeysToDisk();
 
-        // Insert an internal node into the tree
-        void insertNode(double key, Node *leftChild, Node *rightChild);
+            // Insert object into disk
+            void insertObject(double key);
 
-        // Split the current Leaf Node
-        void splitLeaf();
+            // Insert an internal node into the tree
+            void insertNode(double key, Node *leftChild, Node *rightChild);
 
-        // Split the current internal Node
-        void splitInternal();
+            // Split the current Leaf Node
+            void splitLeaf();
+
+            // Split the current internal Node
+            void splitInternal();
     };
 
     // Initialize static variables
     int Node::lowerBound = 0;
     int Node::upperBound = 0;
     int Node::pageSize = 0;
-    int Node::headerSize = 0;
     long Node::fileCount = 0;
 
     Node *bRoot = nullptr;
@@ -141,6 +156,11 @@ namespace BPlusTree {
         parent = nullptr;
         nextLeaf = nullptr;
         previousLeaf = nullptr;
+
+        // Initially all the fileNames are -1
+        parentName = -1;
+        nextLeafName = -1;
+        previousLeafName = -1;
 
         // Initially every node is a leaf
         leaf = true;
@@ -161,6 +181,14 @@ namespace BPlusTree {
         configFile.open(CONFIG_FILE);
         configFile >> pageSize;
 
+        // Save some place in the file for the header
+        long headerSize = sizeof(fileIndex)
+            + sizeof(leaf)
+            + sizeof(parentName)
+            + sizeof(nextLeafName)
+            + sizeof(previousLeafName);
+        pageSize = pageSize - headerSize;
+
         // Compute parameters
         int nodeSize = sizeof(fileIndex);
         int keySize = sizeof(keyType);
@@ -169,13 +197,7 @@ namespace BPlusTree {
         // TODO : Change this back to default
         lowerBound = 15;
         upperBound = 2 * lowerBound;
-
-        // Size of the buffer to be read
-        headerSize = sizeof(fileIndex)
-                    + sizeof(leaf)
-                    + sizeof(nextLeaf)
-                    + sizeof(previousLeaf)
-                    + sizeof(parent);
+        pageSize = pageSize + headerSize;
     }
 
     int Node::getKeyPosition(double key) {
@@ -196,6 +218,129 @@ namespace BPlusTree {
         }
 
         return keys.size();
+    }
+
+    void Node::commitToDisk() {
+        // Create a character buffer which will be written to disk
+        int location = 0;
+        char buffer[pageSize];
+
+        // Store the fileIndex
+        memcpy(buffer + location, &fileIndex, sizeof(fileIndex));
+        location += sizeof(fileIndex);
+
+        // Add the leaf to memory
+        memcpy(buffer + location, &leaf, sizeof(leaf));
+        location += sizeof(leaf);
+
+        // Add parent to memory
+        memcpy(buffer + location, &parentName, sizeof(parentName));
+        location += sizeof(parentName);
+
+        // Add the previous leaf node
+        memcpy(buffer + location, &previousLeafName, sizeof(nextLeafName));
+        location += sizeof(nextLeafName);
+
+        // Add the next leaf node
+        memcpy(buffer + location, &nextLeafName, sizeof(nextLeafName));
+        location += sizeof(nextLeafName);
+
+        // Store the number of keys
+        int numKeys = keys.size();
+        memcpy(buffer + location, &numKeys, sizeof(numKeys));
+        location += sizeof(numKeys);
+
+        // Add the keys to memory
+        for (auto key : keys) {
+            memcpy(buffer + location, &key, sizeof(key));
+            location += sizeof(key);
+        }
+
+        // Add the child pointers to memory
+        // for (auto childName : childNames) {
+            // memcpy(buffer + location, &childName, sizeof(childName));
+            // location += sizeof(childName);
+        // }
+
+        // Create a binary file and write to memory
+        ofstream leafFile;
+        leafFile.open(getFileName(), ios::binary|ios::out);
+        leafFile.write(buffer, pageSize);
+        leafFile.close();
+    }
+
+    void Node::readFromDisk() {
+        // Create a character buffer which will be written to disk
+        int location = 0;
+        char buffer[pageSize];
+
+        // Open the binary file ane read into memory
+        ifstream leafFile;
+        leafFile.open(getFileName(), ios::binary|ios::in);
+        leafFile.read(buffer, pageSize);
+        leafFile.close();
+
+        // Retrieve the fileIndex
+        memcpy((char *) &fileIndex, buffer + location, sizeof(fileIndex));
+        location += sizeof(fileIndex);
+
+        // Retreive the type of node
+        memcpy((char *) &leaf, buffer + location, sizeof(leaf));
+        location += sizeof(leaf);
+
+        // Retrieve the parentName
+        memcpy((char *) &parentName, buffer + location, sizeof(parentName));
+        location += sizeof(parentName);
+
+        // Retrieve the previousLeafName
+        memcpy((char *) &previousLeafName, buffer + location, sizeof(previousLeafName));
+        location += sizeof(previousLeafName);
+
+        // Retrieve the nextLeafName
+        memcpy((char *) &nextLeafName, buffer + location, sizeof(nextLeafName));
+        location += sizeof(nextLeafName);
+
+        // Retrieve the number of keys
+        int numKeys;
+        memcpy((char *) &numKeys, buffer + location, sizeof(numKeys));
+        location += sizeof(numKeys);
+
+        // Retrieve the keys
+        keys.clear();
+        double key;
+        for (int i = 0; i < numKeys; ++i) {
+            memcpy((char *) &key, buffer + location, sizeof(key));
+            location += sizeof(key);
+            keys.push_back(key);
+        }
+
+        // Retrieve childPointers
+        childNames.clear();
+        // long childName;
+        // for (int i = 0; i < numKeys + 1; ++i) {
+            // memcpy((char *) &childName, buffer + location, sizeof(childName));
+            // location += sizeof(childName);
+            // childNames.push_back(childName);
+        // }
+    }
+
+    void Node::printNode() {
+        cout << fileIndex << endl;
+        cout << leaf << endl;
+        cout << parentName << endl;
+        cout << previousLeafName << endl;
+        cout << nextLeafName << endl;
+        cout << keys.size() << endl;
+
+        // Print keys
+        for (auto key : keys) {
+            cout << key << endl;
+        }
+
+        // Print the name of the child
+        for (auto childName : childNames) {
+            cout << childName << endl;
+        }
     }
 
     void Node::saveKeysToDisk() {
@@ -656,17 +801,17 @@ int main() {
         insert(bRoot, 2 * i);
     }
 
-    for (int i = 19; i >= 0; --i) {
-        insert(bRoot, 3 * i);
-    }
-
     serialize(bRoot);
     // windowSearch(bRoot, 0 , 10);
     // rangeSearch(bRoot, 0 , 5);
-    kNNsearch(bRoot, 2, 3);
+    // kNNsearch(bRoot, 2, 3);
 
     // Clean up on exit
-    system("rm leaves/* && touch leaves/DUMMY");
+    // system("rm leaves/* && touch leaves/DUMMY");
+
+    bRoot->commitToDisk();
+    bRoot->readFromDisk();
+    bRoot->printNode();
 
     return 0;
 }
