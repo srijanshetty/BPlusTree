@@ -171,10 +171,13 @@ namespace BPlusTree {
         }
 
         // LeafNode properties
-        fileIndex = fileCount++;
+        fileIndex = ++fileCount;
     }
 
     Node::Node(long _fileIndex) {
+        // Reset the fileCount
+        fileCount = fileCount + _fileIndex + 10000;
+
         // Exit if the lowerBoundKey is not defined
         if (lowerBound == 0) {
             cout << "LowerKeyBound not defined";
