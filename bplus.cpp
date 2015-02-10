@@ -855,23 +855,36 @@ int main() {
     Node::initialize();
 
     // Create a new tree
-    bRoot = new Node();
+    bRoot = new Node(871300081);
 
-    for (long i = 0; i < 40; ++i) {
-        cout << "Insert" << 2 * i << endl;
-        insert(bRoot, 2 * i);
-        bRoot->readFromDisk();
-    }
+    // for (long i = 0; i < 150; ++i) {
+        // cout << "Insert" << 2 * i << endl;
+        // insert(bRoot, 2 * i);
+    // }
 
     bRoot->serialize();
-    // windowSearch(bRoot, 0 , 10);
-    // rangeSearch(bRoot, 0 , 5);
+    // windowSearch(bRoot, 0 , 150);
+    rangeSearch(bRoot, 0 , 5);
     // kNNsearch(bRoot, 2, 3);
 
-    // Clean up on exit
-    // system("rm leaves/* && touch leaves/DUMMY");
+    int choice;
+    cout << endl << "What do you want to do?" << endl;
+    cout << "1. Clean up" << endl;
+    cout << "2. Output root info" << endl;
+    cout << "> ";
+    cin >> choice;
 
-    delete bRoot;
+    switch(choice) {
+        case 1:
+            // Clean up on exit
+            cout << "Cleaning up ...." << endl;
+            system("rm leaves/* && touch leaves/DUMMY");
+            break;
+        default:
+            // Print root stats
+            bRoot->printNode();
+            break;
+    }
 
     return 0;
 }
