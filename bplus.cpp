@@ -176,7 +176,7 @@ namespace BPlusTree {
 
     Node::Node(long _fileIndex) {
         // Reset the fileCount
-        fileCount = fileCount + _fileIndex + 10000;
+        fileCount = fileCount + 100000;
 
         // Exit if the lowerBoundKey is not defined
         if (lowerBound == 0) {
