@@ -705,14 +705,14 @@ namespace BPlusTree {
             // Check nextleaf for same node
             if (root->nextLeafIndex != DEFAULT_LOCATION) {
                 // Load up the nextLeaf from disk
-                Node *tempLeaf = new Node(root->nextLeafIndex);
+                Node *tempNode = new Node(root->nextLeafIndex);
 
                 // Check in the nextLeaf and delegate
-                if (tempLeaf->keys.front() == searchKey) {
-                    pointSearch(tempLeaf, searchKey);
+                if (tempNode->keys.front() == searchKey) {
+                    pointSearch(tempNode, searchKey);
                 }
 
-                delete tempLeaf;
+                delete tempNode;
             }
         } else {
             // We traverse the tree
@@ -730,44 +730,53 @@ namespace BPlusTree {
     }
 
     // window search
-//     void windowSearch(Node *root, double lowerLimit, double upperLimit) {
-//         // If the root is a leaf, we can directly search
-//         if (root->isLeaf()) {
-//             root->readFromDisk();
-//
-//             // Print all nodes in the current leaf which satisfy the criteria
-//             for (auto key : root->keys) {
-//                 if (key >=lowerLimit && key <= upperLimit) {
-//                     cout << key << endl;
-//                 }
-//             }
-//
-//             // Check nextleaf for the condition
-//             if (root->nextLeaf != nullptr
-//                     && root->nextLeaf->keys.front() >= lowerLimit
-//                     && root->nextLeaf->keys.front() <= upperLimit) {
-//                 windowSearch(root->nextLeaf, lowerLimit, upperLimit);
-//             }
-//         } else {
-//             // We traverse the tree
-//             int position = root->getKeyPosition(lowerLimit);
-//
-//             // Recurse into the tree
-//             windowSearch(root->children[position], lowerLimit, upperLimit);
-//         }
-//
-//     }
-//
-//     //rangesearch
-//     void rangeSearch(Node *root, double center, double range) {
-//         double upperBound = center + range;
-//         double lowerBound = (center - range >= 0) ? center - range : 0;
-//
-//         // Call windowSearch internally
-//         windowSearch(root, lowerBound, upperBound);
-//     }
-//
-//     // kNN query
+    void windowSearch(Node *root, double lowerLimit, double upperLimit) {
+        // If the root is a leaf, we can directly search
+        if (root->isLeaf()) {
+            // Print all nodes in the current leaf which satisfy the criteria
+            for (auto key : root->keys) {
+                if (key >=lowerLimit && key <= upperLimit) {
+                    cout << key << endl;
+                }
+            }
+
+            // If the nextLeafNode is not null
+            if (root->nextLeafIndex != DEFAULT_LOCATION) {
+                Node *tempNode= new Node(root->nextLeafIndex);
+
+                // Check for condition and recurse
+                if (tempNode->keys.front() >= lowerLimit && tempNode->keys.front() <=upperLimit) {
+                    windowSearch(tempNode, lowerLimit, upperLimit);
+                }
+
+                // Delete the tempNode
+                delete tempNode;
+            }
+        } else {
+            // We traverse the tree
+            long position = root->getKeyPosition(lowerLimit);
+
+            // Load the node from disk
+            Node *nextRoot = new Node(root->childIndices[position]);
+
+            // Recurse into the node
+            windowSearch(nextRoot, lowerLimit, upperLimit);
+
+            // Clean up
+            delete nextRoot;
+        }
+    }
+
+    //rangesearch
+    void rangeSearch(Node *root, double center, double range) {
+        double upperBound = center + range;
+        double lowerBound = (center - range >= 0) ? center - range : 0;
+
+        // Call windowSearch internally
+        windowSearch(root, lowerBound, upperBound);
+    }
+
+    // kNN query
 //     void kNNsearch(Node *root, double center, long k) {
 //         // A priority_queue to keep the elements ordered
 //         priority_queue< pair<Node*, double>, vector< pair<Node*, double> >, compare<Node *> > q;
