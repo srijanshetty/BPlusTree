@@ -675,7 +675,7 @@ namespace BPlusTree {
 #endif
         } else {
             // We traverse the tree
-            int position = root->getKeyPosition(key);
+            long position = root->getKeyPosition(key);
 
             // Load the node from disk
             Node *nextRoot = new Node(root->childIndices[position]);
