@@ -687,34 +687,46 @@ namespace BPlusTree {
             delete nextRoot;
         }
     }
-//
-//     // Point search in a BPlusTree
-//     void pointSearch(Node *root, double searchKey) {
-//         // If the root is a leaf, we can directly search
-//         if (root->isLeaf()) {
-//             root->readFromDisk();
-//
-//             // Print all nodes in the current leaf
-//             for (auto key : root->keys) {
-//                 if (key == searchKey) {
-//                     cout << key << endl;
-//                 }
-//             }
-//
-//             // Check nextleaf for same node
-//             if (root->nextLeaf != nullptr && root->nextLeaf->keys.front() == searchKey) {
-//                 pointSearch(root->nextLeaf, searchKey);
-//             }
-//         } else {
-//             // We traverse the tree
-//             long position = root->getKeyPosition(searchKey);
-//
-//             // Recurse into the tree
-//             pointSearch(root->children[position], searchKey);
-//         }
-//     }
-//
-//     // window search
+
+    // Point search in a BPlusTree
+    void pointSearch(Node *root, double searchKey) {
+        // If the root is a leaf, we can directly search
+        if (root->isLeaf()) {
+            // Print all nodes in the current leaf
+            for (auto key : root->keys) {
+                if (key == searchKey) {
+                    cout << key << endl;
+                }
+            }
+
+            // Check nextleaf for same node
+            if (root->nextLeafIndex != DEFAULT_LOCATION) {
+                // Load up the nextLeaf from disk
+                Node *tempLeaf = new Node(root->nextLeafIndex);
+
+                // Check in the nextLeaf and delegate
+                if (tempLeaf->keys.front() == searchKey) {
+                    pointSearch(tempLeaf, searchKey);
+                }
+
+                delete tempLeaf;
+            }
+        } else {
+            // We traverse the tree
+            long position = root->getKeyPosition(searchKey);
+
+            // Load the node from disk
+            Node *nextRoot = new Node(root->childIndices[position]);
+
+            // Recurse into the node
+            pointSearch(nextRoot, searchKey);
+
+            // Clean up
+            delete nextRoot;
+        }
+    }
+
+    // window search
 //     void windowSearch(Node *root, double lowerLimit, double upperLimit) {
 //         // If the root is a leaf, we can directly search
 //         if (root->isLeaf()) {
