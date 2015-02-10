@@ -686,6 +686,9 @@ namespace BPlusTree {
             // Clean up
             delete nextRoot;
         }
+
+        // Read the root backup
+        bRoot->readFromDisk();
     }
 
     // Point search in a BPlusTree
