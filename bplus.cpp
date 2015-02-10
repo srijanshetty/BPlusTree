@@ -110,6 +110,9 @@ namespace BPlusTree {
             // Get the file name
             string getFileName() { return PREFIX + to_string(fileIndex); }
 
+            // Get the fileIndex
+            long getFileIndex() { return fileIndex; }
+
             // set to internalNode
             void setToInternalNode() { leaf = false; }
 
@@ -777,75 +780,75 @@ namespace BPlusTree {
     }
 
     // kNN query
-//     void kNNsearch(Node *root, double center, long k) {
-//         // A priority_queue to keep the elements ordered
-//         priority_queue< pair<Node*, double>, vector< pair<Node*, double> >, compare<Node *> > q;
-//
-//         // Insert the root into the queue
-//         q.push(make_pair(root, 0));
-//
-//         // Vector to store the answers
-//         vector<double> answers;
-//
-//         while(!q.empty() && (long)answers.size() <= k) {
-//             Node *currentNode = q.top().first;
-//             q.pop();
-//
-//             if (currentNode->isLeaf()) {
-//                 // All the keys for a leaf node are answers
-//                 for (auto key : currentNode->keys) {
-//                     answers.push_back(key);
-//                 }
-//             } else {
-//                 if (currentNode->keys.size() >= 1) {
-//                     double distance;
-//                     vector<double> distances;
-//
-//                     // For the first key
-//                     if (center < currentNode->keys.front()) {
-//                         distances.push_back(0);
-//                     } else {
-//                         distances.push_back(abs(center - currentNode->keys.front()));
-//                     }
-//
-//                     // For middle keys
-//                     for (long i = 1; i < (long)currentNode->keys.size(); ++i) {
-//                         if (center < currentNode->keys[i - 1]) {
-//                             distance = abs(center - currentNode->keys[i - 1]);
-//                         } else if (center > currentNode->keys[i]) {
-//                             distance = abs(center - currentNode->keys[i]);
-//                         } else {
-//                             distance = 0;
-//                         }
-//
-//                         distances.push_back(distance);
-//                     }
-//
-//                     // For the last key
-//                     if (currentNode->keys.size() > 1) {
-//                         if (center > currentNode->keys.back()) {
-//                             distances.push_back(0);
-//                         } else {
-//                             distances.push_back(abs(center - currentNode->keys.back()));
-//                         }
-//                     }
-//
-//                     // Now we push the children along with the computed distances
-//                     for (long i = 0; i < (long)distances.size(); ++i) {
-//                         q.push(make_pair(currentNode->children[i], distances[i]));
-//                     }
-//                 }
-//             }
-//         }
-//
-//         // Sort the obtained answers
-//         sort(answers.begin(), answers.end(), [&](double T1, double T2) { return (abs(T1 - center) < abs(T2 - center)); });
-//
-//         // Print the answers
-//         for (long i = 0; i < k; ++i) {
-//             cout << answers[i] << endl;
-//         }
-    // }
+    void kNNsearch(Node *root, double center, long k) {
+        // A priority_queue to keep the elements ordered
+        priority_queue< pair<long, double>, vector< pair<long, double> >, compare<long> > q;
+
+        // Insert the root into the queue
+        q.push(make_pair(root->getFileIndex(), 0));
+
+        // Vector to store the answers
+        vector<double> answers;
+
+        while(!q.empty() && (long)answers.size() <= k) {
+            Node *currentNode = new Node(q.top().first);
+            q.pop();
+
+            if (currentNode->isLeaf()) {
+                // All the keys for a leaf node are answers
+                for (auto key : currentNode->keys) {
+                    answers.push_back(key);
+                }
+            } else {
+                if (currentNode->keys.size() >= 1) {
+                    double distance;
+                    vector<double> distances;
+
+                    // For the first key
+                    if (center < currentNode->keys.front()) {
+                        distances.push_back(0);
+                    } else {
+                        distances.push_back(abs(center - currentNode->keys.front()));
+                    }
+
+                    // For middle keys
+                    for (long i = 1; i < (long)currentNode->keys.size(); ++i) {
+                        if (center < currentNode->keys[i - 1]) {
+                            distance = abs(center - currentNode->keys[i - 1]);
+                        } else if (center > currentNode->keys[i]) {
+                            distance = abs(center - currentNode->keys[i]);
+                        } else {
+                            distance = 0;
+                        }
+
+                        distances.push_back(distance);
+                    }
+
+                    // For the last key
+                    if (currentNode->keys.size() > 1) {
+                        if (center > currentNode->keys.back()) {
+                            distances.push_back(0);
+                        } else {
+                            distances.push_back(abs(center - currentNode->keys.back()));
+                        }
+                    }
+
+                    // Now we push the children along with the computed distances
+                    for (long i = 0; i < (long)distances.size(); ++i) {
+                        q.push(make_pair(currentNode->childIndices[i], distances[i]));
+                    }
+                }
+            }
+        }
+
+        // Sort the obtained answers
+        sort(answers.begin(), answers.end(), [&center](double T1, double T2) { return (abs(T1 - center) < abs(T2 - center)); });
+
+        // Print the answers
+        for (long i = 0; i < k; ++i) {
+            cout << answers[i] << endl;
+        }
+    }
 }
 
 using namespace BPlusTree;
@@ -864,8 +867,8 @@ int main() {
 
     bRoot->serialize();
     // windowSearch(bRoot, 0 , 150);
-    rangeSearch(bRoot, 0 , 5);
-    // kNNsearch(bRoot, 2, 3);
+    // rangeSearch(bRoot, 0 , 5);
+    kNNsearch(bRoot, 56, 5);
 
     int choice;
     cout << endl << "What do you want to do?" << endl;
