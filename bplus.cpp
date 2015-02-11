@@ -52,7 +52,7 @@
 #define TREE_PREFIX "leaves/leaf_"
 #define OBJECT_PREFIX "objects/object_"
 #define DEFAULT_LOCATION -1
-#define DEBUG
+// #define DEBUG
 
 #include <iostream>
 #include <math.h>
@@ -502,7 +502,7 @@ namespace BPlusTree {
 
         // Update the root if the element was inserted in the root
         if (fileIndex == bRoot->getFileIndex()) {
-            // bRoot->readFromDisk();
+            bRoot->readFromDisk();
         }
     }
 
@@ -729,9 +729,6 @@ namespace BPlusTree {
             // Clean up
             delete nextRoot;
         }
-
-        // Read the root backup
-        bRoot->readFromDisk();
     }
 
     // Point search in a BPlusTree
