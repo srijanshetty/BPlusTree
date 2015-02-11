@@ -49,7 +49,8 @@
 #define CONFIG_FILE "./bplustree.config"
 
 // Constants
-#define PREFIX "leaves/leaf_"
+#define TREE_PREFIX "leaves/leaf_"
+#define OBJECT_PREFIX "objects/object_"
 #define DEFAULT_LOCATION -1
 #define DEBUG
 
@@ -75,6 +76,23 @@ namespace BPlusTree {
                     return T1.second > T2.second;
                 }
         };
+
+    // Database objects
+    class Object {
+        private:
+            double key;
+            long fileIndex;
+
+        public:
+            Object(double _key, long _fileIndex) : key(_key), fileIndex(_fileIndex) {
+            }
+
+            // Return the key of the object
+            double getKey() { return key; }
+
+            // Return the fileName
+            string getFileName() { return OBJECT_PREFIX + to_string(fileIndex); }
+    };
 
     class Node {
         private:
@@ -108,7 +126,7 @@ namespace BPlusTree {
             bool isLeaf() { return leaf; }
 
             // Get the file name
-            string getFileName() { return PREFIX + to_string(fileIndex); }
+            string getFileName() { return TREE_PREFIX + to_string(fileIndex); }
 
             // Get the fileIndex
             long getFileIndex() { return fileIndex; }
