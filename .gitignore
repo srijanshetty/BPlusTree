@@ -22,7 +22,11 @@
 *.out
 *.app
 
-# Ignore leaves
+# Ignore files
 leaves/*
 !leaves/
 !leaves/DUMMY
+
+objects/*
+!objects/
+!objects/DUMMY
