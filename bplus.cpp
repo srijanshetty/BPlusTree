@@ -499,6 +499,11 @@ namespace BPlusTree {
         if ((long)keys.size() > upperBound) {
             splitInternal();
         }
+
+        // Update the root if the element was inserted in the root
+        if (fileIndex == bRoot->getFileIndex()) {
+            // bRoot->readFromDisk();
+        }
     }
 
     void Node::splitInternal() {
