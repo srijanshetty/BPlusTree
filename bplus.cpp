@@ -78,13 +78,19 @@ namespace BPlusTree {
         };
 
     // Database objects
-    class Object {
+    class DBObject {
         private:
             double key;
             long fileIndex;
+            static long objectCount;
 
         public:
-            Object(double _key, long _fileIndex) : key(_key), fileIndex(_fileIndex) {
+            DBObject(double _key) : key(_key) {
+                fileIndex = ++objectCount;
+            }
+
+            DBObject(double _key, long _fileIndex) : key(_key), fileIndex(_fileIndex) {
+                objectCount = objectCount + 10000;
             }
 
             // Return the key of the object
@@ -92,7 +98,12 @@ namespace BPlusTree {
 
             // Return the fileName
             string getFileName() { return OBJECT_PREFIX + to_string(fileIndex); }
+
+            // Return the fileIndex
+            long getFileIndex() { return fileIndex; }
     };
+
+    long DBObject::objectCount = 0;
 
     class Node {
         private:
@@ -156,7 +167,7 @@ namespace BPlusTree {
             void serialize();
 
             // Insert object into disk
-            void insertObject(double key);
+            void insertObject(DBObject object);
 
             // Insert an internal node into the tree
             void insertNode(double key, long leftChildIndex, long rightChildIndex);
@@ -598,7 +609,8 @@ namespace BPlusTree {
         // Create a surrogate leaf node
         Node *surrogateLeafNode = new Node();
         for (auto key = keys.begin() + lowerBound; key != keys.end(); ++key) {
-            surrogateLeafNode->insertObject(*key);
+            DBObject object = DBObject(*key);
+            surrogateLeafNode->insertObject(object);
         }
 
         // Resize the current leaf node and commit the node to disk
@@ -679,11 +691,11 @@ namespace BPlusTree {
     }
 
     // Insert a key into the BPlusTree
-    void insert(Node *root, double key) {
+    void insert(Node *root, DBObject object) {
         // If the root is a leaf, we can directly insert
         if (root->isLeaf()) {
             // Insert object
-            root->insertObject(key);
+            root->insertObject(object);
 
             // Split if required
             if (root->size() > root->upperBound) {
@@ -696,13 +708,13 @@ namespace BPlusTree {
 #endif
         } else {
             // We traverse the tree
-            long position = root->getKeyPosition(key);
+            long position = root->getKeyPosition(object.getKey());
 
             // Load the node from disk
             Node *nextRoot = new Node(root->childIndices[position]);
 
             // Recurse into the node
-            insert(nextRoot, key);
+            insert(nextRoot, object);
 
             // Clean up
             delete nextRoot;
@@ -871,46 +883,25 @@ namespace BPlusTree {
 
 using namespace BPlusTree;
 
-void exitChoice() {
-    int choice;
-    cout << endl << "What do you want to do?" << endl;
-    cout << "1. Clean up" << endl;
-    cout << "2. Output root info" << endl;
-    cout << "> ";
-    cin >> choice;
-
-    switch(choice) {
-        case 1:
-            // Clean up on exit
-            cout << "Cleaning up ...." << endl;
-            system("rm leaves/* && touch leaves/DUMMY");
-            break;
-        default:
-            // Print root stats
-            bRoot->printNode();
-            break;
-    }
-}
-
 int main() {
     // Initialize the BPlusTree module
     Node::initialize();
 
     // Create a new tree
-    bRoot = new Node(871300081);
+    bRoot = new Node();
 
-    // for (long i = 0; i < 150; ++i) {
-        // cout << "Insert" << 2 * i << endl;
-        // insert(bRoot, 2 * i);
-    // }
+    for (long i = 0; i < 150; ++i) {
+        cout << "Insert" << 2 * i << endl;
+        insert(bRoot, DBObject(2 * i));
+    }
 
     bRoot->serialize();
     // windowSearch(bRoot, 0 , 150);
     // rangeSearch(bRoot, 0 , 5);
-    kNNsearch(bRoot, 56, 5);
+    // kNNsearch(bRoot, 56, 5);
 
-    Object *o = new Object(100, 100);
-    cout << o->getFileName();
+    // Print out information about the root
+    bRoot->printNode();
 
     return 0;
 }
