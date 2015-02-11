@@ -82,15 +82,26 @@ namespace BPlusTree {
         private:
             double key;
             long fileIndex;
+            string dataString;
             static long objectCount;
 
         public:
-            DBObject(double _key) : key(_key) {
+            DBObject(double _key, string _dataString) : key(_key), dataString(_dataString) {
                 fileIndex = ++objectCount;
+
+                // Open a file and write the string to it
+                ofstream ofile(getFileName());
+                ofile << dataString;
+                ofile.close();
             }
 
             DBObject(double _key, long _fileIndex) : key(_key), fileIndex(_fileIndex) {
                 objectCount = objectCount + 10000;
+
+                // Open a file and read the dataString
+                ifstream ifile(getFileName());
+                ifile >> dataString;
+                ifile.close();
             }
 
             // Return the key of the object
@@ -619,7 +630,7 @@ namespace BPlusTree {
         // Create a surrogate leaf node
         Node *surrogateLeafNode = new Node();
         for (auto key = keys.begin() + lowerBound; key != keys.end(); ++key) {
-            DBObject object = DBObject(*key);
+            DBObject object = DBObject(*key, "DUMMY");
             surrogateLeafNode->insertObject(object);
         }
 
@@ -895,15 +906,15 @@ void buildTree() {
     ifile.open("./temp.txt", ios::in);
 
     double key;
-    string keyString;
+    string dataString;
     long count = 0;
-    while (ifile >> key >> keyString) {
+    while (ifile >> key >> dataString) {
         if (count % 10000 == 0) {
             cout << "Insert " << count << endl;
         }
 
         // Insert the object into file
-        insert(bRoot, DBObject(key));
+        insert(bRoot, DBObject(key, dataString));
 
         // Update the counter
         count++;
