@@ -393,17 +393,22 @@ namespace BPlusTree {
         cout << endl;
     }
 
-    void Node::insertObject(double key) {
-        long position = getKeyPosition(key);
+    void Node::insertObject(DBObject object) {
+        long position = getKeyPosition(object.getKey());
 
         // insert the new key to keys
-        keys.insert(keys.begin() + position, key);
+        keys.insert(keys.begin() + position, object.getKey());
 
         // Commit the new node back into memory
         commitToDisk();
     }
 
     void Node::serialize() {
+        // Return if node is empty
+        if (keys.size() == 0) {
+            return;
+        }
+
         // Prettify
         cout << endl << endl;
 
