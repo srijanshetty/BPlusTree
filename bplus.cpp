@@ -871,23 +871,7 @@ namespace BPlusTree {
 
 using namespace BPlusTree;
 
-int main() {
-    // Initialize the BPlusTree module
-    Node::initialize();
-
-    // Create a new tree
-    bRoot = new Node(871300081);
-
-    // for (long i = 0; i < 150; ++i) {
-        // cout << "Insert" << 2 * i << endl;
-        // insert(bRoot, 2 * i);
-    // }
-
-    bRoot->serialize();
-    // windowSearch(bRoot, 0 , 150);
-    // rangeSearch(bRoot, 0 , 5);
-    kNNsearch(bRoot, 56, 5);
-
+void exitChoice() {
     int choice;
     cout << endl << "What do you want to do?" << endl;
     cout << "1. Clean up" << endl;
@@ -906,6 +890,27 @@ int main() {
             bRoot->printNode();
             break;
     }
+}
+
+int main() {
+    // Initialize the BPlusTree module
+    Node::initialize();
+
+    // Create a new tree
+    bRoot = new Node(871300081);
+
+    // for (long i = 0; i < 150; ++i) {
+        // cout << "Insert" << 2 * i << endl;
+        // insert(bRoot, 2 * i);
+    // }
+
+    bRoot->serialize();
+    // windowSearch(bRoot, 0 , 150);
+    // rangeSearch(bRoot, 0 , 5);
+    kNNsearch(bRoot, 56, 5);
+
+    Object *o = new Object(100, 100);
+    cout << o->getFileName();
 
     return 0;
 }
