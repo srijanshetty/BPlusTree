@@ -897,12 +897,12 @@ int main() {
     // Create a new tree
     bRoot = new Node();
 
-    for (long i = 0; i < 20; ++i) {
+    for (long i = 0; i < 60; ++i) {
         cout << "Insert" << 2 * i << endl;
         insert(bRoot, DBObject(2 * i));
     }
 
-    for (long i = 20; i > 0; --i) {
+    for (long i = 60; i > 0; --i) {
         cout << "Insert" << 3 * i << endl;
         insert(bRoot, DBObject(3 * i));
     }
