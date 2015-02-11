@@ -890,6 +890,29 @@ namespace BPlusTree {
 
 using namespace BPlusTree;
 
+void buildTree() {
+    ifstream ifile;
+    ifile.open("./temp.txt", ios::in);
+
+    double key;
+    string keyString;
+    long count = 0;
+    while (ifile >> key >> keyString) {
+        if (count % 10000 == 0) {
+            cout << "Insert " << count << endl;
+        }
+
+        // Insert the object into file
+        insert(bRoot, DBObject(key));
+
+        // Update the counter
+        count++;
+    }
+
+    // Close the file
+    ifile.close();
+}
+
 int main() {
     // Initialize the BPlusTree module
     Node::initialize();
@@ -897,15 +920,7 @@ int main() {
     // Create a new tree
     bRoot = new Node();
 
-    for (long i = 0; i < 60; ++i) {
-        cout << "Insert" << 2 * i << endl;
-        insert(bRoot, DBObject(2 * i));
-    }
-
-    for (long i = 60; i > 0; --i) {
-        cout << "Insert" << 3 * i << endl;
-        insert(bRoot, DBObject(3 * i));
-    }
+    buildTree();
 
     bRoot->serialize();
     // windowSearch(bRoot, 0 , 150);
