@@ -30,3 +30,6 @@ leaves/*
 objects/*
 !objects/
 !objects/DUMMY
+
+# temp files
+temp.txt
