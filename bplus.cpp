@@ -110,6 +110,9 @@ namespace BPlusTree {
             // Return the fileName
             string getFileName() { return OBJECT_PREFIX + to_string(fileIndex); }
 
+            // Return the string
+            string getDataString() { return dataString; }
+
             // Return the fileIndex
             long getFileIndex() { return fileIndex; }
     };
@@ -136,6 +139,7 @@ namespace BPlusTree {
             double keyType;                     // Dummy to indicate container base
             vector<double> keys;
             vector<long> childIndices;          // FileIndices of the children
+            vector<long> objectPointers;        // To store the object pointers
 
         public:
             // Basic initialization
@@ -314,6 +318,11 @@ namespace BPlusTree {
                 memcpy(buffer + location, &childIndex, sizeof(childIndex));
                 location += sizeof(childIndex);
             }
+        } else {
+            for (auto objectPointer : objectPointers) {
+                memcpy(buffer + location, &objectPointer, sizeof(objectPointer));
+                location += sizeof(objectPointer);
+            }
         }
 
         // Create a binary file and write to memory
@@ -375,7 +384,15 @@ namespace BPlusTree {
             for (long i = 0; i < numKeys + 1; ++i) {
                 memcpy((char *) &childIndex, buffer + location, sizeof(childIndex));
                 location += sizeof(childIndex);
-            childIndices.push_back(childIndex);
+                childIndices.push_back(childIndex);
+            }
+        } else {
+            objectPointers.clear();
+            long objectPointer;
+            for (long i = 0; i < numKeys; ++i) {
+                memcpy((char *) &objectPointer, buffer + location, sizeof(objectPointer));
+                location += sizeof(objectPointer);
+                objectPointers.push_back(objectPointer);
             }
         }
     }
@@ -409,6 +426,9 @@ namespace BPlusTree {
 
         // insert the new key to keys
         keys.insert(keys.begin() + position, object.getKey());
+
+        // insert the object pointer to the end
+        objectPointers.insert(objectPointers.begin() + position, object.getFileIndex());
 
         // Commit the new node back into memory
         commitToDisk();
@@ -627,15 +647,16 @@ namespace BPlusTree {
         cout << endl;
 #endif
 
-        // Create a surrogate leaf node
+        // Create a surrogate leaf node with the keys and object Pointers
         Node *surrogateLeafNode = new Node();
-        for (auto key = keys.begin() + lowerBound; key != keys.end(); ++key) {
-            DBObject object = DBObject(*key, "DUMMY");
+        for (long i = lowerBound; i < (long) keys.size(); ++i) {
+            DBObject object = DBObject(keys[i], objectPointers[i]);
             surrogateLeafNode->insertObject(object);
         }
 
         // Resize the current leaf node and commit the node to disk
         keys.resize(lowerBound);
+        objectPointers.resize(lowerBound);
 
 #ifdef DEBUG
         // Print them out
@@ -747,9 +768,10 @@ namespace BPlusTree {
         // If the root is a leaf, we can directly search
         if (root->isLeaf()) {
             // Print all nodes in the current leaf
-            for (auto key : root->keys) {
-                if (key == searchKey) {
-                    cout << key << endl;
+            for (long i = 0; i < (long) root->keys.size(); ++i) {
+                if (root->keys[i] == searchKey) {
+                    cout << root->keys[i] << " ";
+                    cout << DBObject(root->keys[i], root->objectPointers[i]).getDataString() << endl;
                 }
             }
 
@@ -785,9 +807,10 @@ namespace BPlusTree {
         // If the root is a leaf, we can directly search
         if (root->isLeaf()) {
             // Print all nodes in the current leaf which satisfy the criteria
-            for (auto key : root->keys) {
-                if (key >=lowerLimit && key <= upperLimit) {
-                    cout << key << endl;
+            for (long i = 0; i < (long) root->keys.size(); ++i) {
+                if (root->keys[i] >= lowerLimit && root->keys[i] <= upperLimit) {
+                    cout << root->keys[i] << " ";
+                    cout << DBObject(root->keys[i], root->objectPointers[i]).getDataString() << endl;
                 }
             }
 
@@ -934,9 +957,10 @@ int main() {
     buildTree();
 
     bRoot->serialize();
-    // windowSearch(bRoot, 0 , 150);
+    // pointSearch(bRoot, 0.252158);
+    windowSearch(bRoot, 0 , 0.2);
     // rangeSearch(bRoot, 0 , 5);
-    // kNNsearch(bRoot, 56, 5);
+    // kNNsearch(bRoot, 0.252158, 5);
 
     // Print out information about the root
     bRoot->printNode();
