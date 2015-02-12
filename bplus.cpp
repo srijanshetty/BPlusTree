@@ -50,7 +50,7 @@
 
 // Constants
 #define TREE_PREFIX "leaves/leaf_"
-#define OBJECT_PREFIX "objects/object_"
+#define OBJECT_FILE "objects/objectFile"
 #define DEFAULT_LOCATION -1
 // #define DEBUG
 
@@ -87,28 +87,25 @@ namespace BPlusTree {
 
         public:
             DBObject(double _key, string _dataString) : key(_key), dataString(_dataString) {
-                fileIndex = ++objectCount;
+                fileIndex = objectCount++;
 
                 // Open a file and write the string to it
-                ofstream ofile(getFileName());
-                ofile << dataString;
+                ofstream ofile(OBJECT_FILE, ios::app);
+                ofile << dataString << endl;
                 ofile.close();
             }
 
             DBObject(double _key, long _fileIndex) : key(_key), fileIndex(_fileIndex) {
-                objectCount = objectCount + 10000;
-
                 // Open a file and read the dataString
-                ifstream ifile(getFileName());
-                ifile >> dataString;
+                ifstream ifile(OBJECT_FILE);
+                for (long i = 0; i < fileIndex + 1; ++i) {
+                    getline(ifile, dataString);
+                }
                 ifile.close();
             }
 
             // Return the key of the object
             double getKey() { return key; }
-
-            // Return the fileName
-            string getFileName() { return OBJECT_PREFIX + to_string(fileIndex); }
 
             // Return the string
             string getDataString() { return dataString; }
