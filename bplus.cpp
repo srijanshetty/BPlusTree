@@ -932,15 +932,62 @@ void buildTree() {
     string dataString;
     long count = 0;
     while (ifile >> key >> dataString) {
-        if (count % 10000 == 0) {
-            cout << "Insert " << count << endl;
-        }
-
         // Insert the object into file
         insert(bRoot, DBObject(key, dataString));
 
         // Update the counter
         count++;
+    }
+
+    // Close the file
+    ifile.close();
+}
+
+void processQuery() {
+    ifstream ifile;
+    ifile.open("./temp.query", ios::in);
+
+    long query;
+    while (ifile >> query) {
+        if (query == 0) {
+            double key;
+            string dataString;
+            ifile >> key >> dataString;
+
+            // Insert into the database
+            cout << endl << query << " " << key << " " << dataString << endl;
+            insert(bRoot, DBObject(key, dataString));
+        } else if (query == 1) {
+            double key;
+            ifile >> key;
+
+            // pointQuery
+            cout << endl << query << " " << key << endl;
+            pointQuery(bRoot, key);
+        } else if (query == 2) {
+            double key, range;
+            ifile >> key >> range;
+
+            // rangeQuery
+            cout << endl << query << " " << key << " " << range << endl;
+            rangeQuery(bRoot, key, range * 0.1);
+        } else if (query == 3) {
+            double key;
+            long k;
+            ifile >> key >> k;
+
+            // kNNQuery
+            cout << endl << query << " " << key << " " << k << endl;
+            kNNQuery(bRoot, key, k);
+        } else if (query == 4) {
+            double lowerLimit;
+            double upperLimit;
+            ifile >> lowerLimit >> upperLimit;
+
+            // windowQuery
+            cout << endl << query << " " << lowerLimit << " " << upperLimit << endl;
+            windowQuery(bRoot, lowerLimit, upperLimit);
+        }
     }
 
     // Close the file
@@ -954,13 +1001,14 @@ int main() {
     // Create a new tree
     bRoot = new Node();
 
+    // Build the tree
     buildTree();
 
+    // Print the tree
     bRoot->serialize();
-    // pointQuery(bRoot, 0.252158);
-    // windowQuery(bRoot, 0 , 0.2);
-    // rangeQuery(bRoot, 0 , 5);
-    kNNQuery(bRoot, 0.252158, 10);
+
+    // Process queries
+    processQuery();
 
     // Print out information about the root
     bRoot->printNode();
