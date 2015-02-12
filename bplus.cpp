@@ -53,6 +53,7 @@
 #define OBJECT_FILE "objects/objectFile"
 #define DEFAULT_LOCATION -1
 // #define DEBUG
+// #define TEST
 
 #include <iostream>
 #include <math.h>
@@ -767,7 +768,9 @@ namespace BPlusTree {
             // Print all nodes in the current leaf
             for (long i = 0; i < (long) root->keys.size(); ++i) {
                 if (root->keys[i] == searchKey) {
+#ifdef TEST
                     cout << root->keys[i] << " ";
+#endif
                     cout << DBObject(root->keys[i], root->objectPointers[i]).getDataString() << endl;
                 }
             }
@@ -806,7 +809,9 @@ namespace BPlusTree {
             // Print all nodes in the current leaf which satisfy the criteria
             for (long i = 0; i < (long) root->keys.size(); ++i) {
                 if (root->keys[i] >= lowerLimit && root->keys[i] <= upperLimit) {
+#ifdef TEST
                     cout << root->keys[i] << " ";
+#endif
                     cout << DBObject(root->keys[i], root->objectPointers[i]).getDataString() << endl;
                 }
             }
@@ -904,7 +909,10 @@ namespace BPlusTree {
             pair <double, long> answer;
             for (long i = 0; i < k && i < (long) answers.size(); ++i) {
                 answer = answers[i];
-                cout << answer.first << " " << DBObject(answer.first, answer.second).getDataString() << endl;
+#ifdef TEST
+                cout << answer.first << " ";
+#endif
+                cout << DBObject(answer.first, answer.second).getDataString() << endl;
             }
         } else {
             // We traverse the tree
@@ -1004,14 +1012,18 @@ int main() {
     // Build the tree
     buildTree();
 
+#ifdef TEST
     // Print the tree
     bRoot->serialize();
+#endif
 
     // Process queries
     processQuery();
 
     // Print out information about the root
+#ifdef TEST
     bRoot->printNode();
+#endif
 
     return 0;
 }
