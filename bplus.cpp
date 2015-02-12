@@ -848,73 +848,76 @@ namespace BPlusTree {
     }
 
     // kNN query
-    void kNNsearch(Node *root, double center, long k) {
-        // A priority_queue to keep the elements ordered
-        priority_queue< pair<long, double>, vector< pair<long, double> >, compare<long> > q;
+    void kNNQuery(Node *root, double center, long k) {
+        // If the root is a leaf, we can directly search
+        if (root->isLeaf()) {
+            vector< pair<double, long> > answers;
 
-        // Insert the root into the queue
-        q.push(make_pair(root->getFileIndex(), 0));
+            // We traverse the tree
+            long position = root->getKeyPosition(center);
 
-        // Vector to store the answers
-        vector<double> answers;
-
-        while(!q.empty() && (long)answers.size() <= k) {
-            Node *currentNode = new Node(q.top().first);
-            q.pop();
-
-            if (currentNode->isLeaf()) {
-                // All the keys for a leaf node are answers
-                for (auto key : currentNode->keys) {
-                    answers.push_back(key);
-                }
-            } else {
-                if (currentNode->keys.size() >= 1) {
-                    double distance;
-                    vector<double> distances;
-
-                    // For the first key
-                    if (center < currentNode->keys.front()) {
-                        distances.push_back(0);
-                    } else {
-                        distances.push_back(abs(center - currentNode->keys.front()));
-                    }
-
-                    // For middle keys
-                    for (long i = 1; i < (long)currentNode->keys.size(); ++i) {
-                        if (center < currentNode->keys[i - 1]) {
-                            distance = abs(center - currentNode->keys[i - 1]);
-                        } else if (center > currentNode->keys[i]) {
-                            distance = abs(center - currentNode->keys[i]);
-                        } else {
-                            distance = 0;
-                        }
-
-                        distances.push_back(distance);
-                    }
-
-                    // For the last key
-                    if (currentNode->keys.size() > 1) {
-                        if (center > currentNode->keys.back()) {
-                            distances.push_back(0);
-                        } else {
-                            distances.push_back(abs(center - currentNode->keys.back()));
-                        }
-                    }
-
-                    // Now we push the children along with the computed distances
-                    for (long i = 0; i < (long)distances.size(); ++i) {
-                        q.push(make_pair(currentNode->childIndices[i], distances[i]));
-                    }
-                }
+            // Get k keys from ahead
+            long count = 0;
+            for (long i = position; i < (long)root->keys.size(); ++i, ++count) {
+                answers.push_back(make_pair(root->keys[i], root->objectPointers[i]));
             }
-        }
 
-        // Sort the obtained answers
-        sort(answers.begin(), answers.end(), [&center](double T1, double T2) { return (abs(T1 - center) < abs(T2 - center)); });
+            // Now check for leaves in front
+            long nextIndex = root->nextLeafIndex;
+            while (count < k && nextIndex != DEFAULT_LOCATION) {
+                Node tempNode = Node(nextIndex);
 
-        // Print the answers
-        for (long i = 0; i < k; ++i) {
-            cout << answers[i] << endl;
+                for (long i = 0; i < (long) tempNode.keys.size(); ++i, ++ count) {
+                    answers.push_back(make_pair(tempNode.keys[i], tempNode.objectPointers[i]));
+                }
+
+                // Update the nextIndex
+                nextIndex = tempNode.nextLeafIndex;
+            }
+
+            // Get k keys from behind
+            count = 0;
+            for (long i = 0; i < (long) position; ++i, ++count) {
+                answers.push_back(make_pair(root->keys[i], root->objectPointers[i]));
+            }
+
+            // Check for leaves behind
+            long previousIndex = root->previousLeafIndex;
+            while (count < k && previousIndex != DEFAULT_LOCATION) {
+                Node tempNode = Node(previousIndex);
+
+                for (long i = 0; i < (long) tempNode.keys.size(); ++i, ++ count) {
+                    answers.push_back(make_pair(tempNode.keys[i], tempNode.objectPointers[i]));
+                }
+
+                // Update the nextIndex
+                nextIndex = tempNode.previousLeafIndex;
+            }
+
+            // Sort the obtained answers
+            sort(answers.begin(), answers.end(),
+                    [&](pair<double, long> T1, pair<double, long> T2) {
+                    return (abs(T1.first - center) < abs(T2.first - center));
+                    });
+
+            // Print the answers
+            pair <double, long> answer;
+            for (long i = 0; i < k; ++i) {
+                answer = answers[i];
+                cout << answer.first << " " << DBObject(answer.first, answer.second).getDataString() << endl;
+            }
+        } else {
+            // We traverse the tree
+            long position = root->getKeyPosition(center);
+
+            // Load the node from disk
+            Node *nextRoot = new Node(root->childIndices[position]);
+
+            // Recurse into the node
+            kNNQuery(nextRoot, center, k);
+
+            // Clean up
+            delete nextRoot;
         }
     }
 }
