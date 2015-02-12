@@ -761,7 +761,7 @@ namespace BPlusTree {
     }
 
     // Point search in a BPlusTree
-    void pointSearch(Node *root, double searchKey) {
+    void pointQuery(Node *root, double searchKey) {
         // If the root is a leaf, we can directly search
         if (root->isLeaf()) {
             // Print all nodes in the current leaf
@@ -779,7 +779,7 @@ namespace BPlusTree {
 
                 // Check in the nextLeaf and delegate
                 if (tempNode->keys.front() == searchKey) {
-                    pointSearch(tempNode, searchKey);
+                    pointQuery(tempNode, searchKey);
                 }
 
                 delete tempNode;
@@ -792,7 +792,7 @@ namespace BPlusTree {
             Node *nextRoot = new Node(root->childIndices[position]);
 
             // Recurse into the node
-            pointSearch(nextRoot, searchKey);
+            pointQuery(nextRoot, searchKey);
 
             // Clean up
             delete nextRoot;
@@ -800,7 +800,7 @@ namespace BPlusTree {
     }
 
     // window search
-    void windowSearch(Node *root, double lowerLimit, double upperLimit) {
+    void windowQuery(Node *root, double lowerLimit, double upperLimit) {
         // If the root is a leaf, we can directly search
         if (root->isLeaf()) {
             // Print all nodes in the current leaf which satisfy the criteria
@@ -817,7 +817,7 @@ namespace BPlusTree {
 
                 // Check for condition and recurse
                 if (tempNode->keys.front() >= lowerLimit && tempNode->keys.front() <=upperLimit) {
-                    windowSearch(tempNode, lowerLimit, upperLimit);
+                    windowQuery(tempNode, lowerLimit, upperLimit);
                 }
 
                 // Delete the tempNode
@@ -831,7 +831,7 @@ namespace BPlusTree {
             Node *nextRoot = new Node(root->childIndices[position]);
 
             // Recurse into the node
-            windowSearch(nextRoot, lowerLimit, upperLimit);
+            windowQuery(nextRoot, lowerLimit, upperLimit);
 
             // Clean up
             delete nextRoot;
@@ -839,12 +839,12 @@ namespace BPlusTree {
     }
 
     //rangesearch
-    void rangeSearch(Node *root, double center, double range) {
+    void rangeQuery(Node *root, double center, double range) {
         double upperBound = center + range;
         double lowerBound = (center - range >= 0) ? center - range : 0;
 
-        // Call windowSearch internally
-        windowSearch(root, lowerBound, upperBound);
+        // Call windowQuery internally
+        windowQuery(root, lowerBound, upperBound);
     }
 
     // kNN query
@@ -954,10 +954,10 @@ int main() {
     buildTree();
 
     bRoot->serialize();
-    // pointSearch(bRoot, 0.252158);
-    windowSearch(bRoot, 0 , 0.2);
-    // rangeSearch(bRoot, 0 , 5);
-    // kNNsearch(bRoot, 0.252158, 5);
+    // pointQuery(bRoot, 0.252158);
+    // windowQuery(bRoot, 0 , 0.2);
+    // rangeQuery(bRoot, 0 , 5);
+    kNNQuery(bRoot, 0.252158, 10);
 
     // Print out information about the root
     bRoot->printNode();
