@@ -891,7 +891,7 @@ namespace BPlusTree {
                 }
 
                 // Update the nextIndex
-                nextIndex = tempNode.previousLeafIndex;
+                previousIndex = tempNode.previousLeafIndex;
             }
 
             // Sort the obtained answers
@@ -902,7 +902,7 @@ namespace BPlusTree {
 
             // Print the answers
             pair <double, long> answer;
-            for (long i = 0; i < k; ++i) {
+            for (long i = 0; i < k && i < (long) answers.size(); ++i) {
                 answer = answers[i];
                 cout << answer.first << " " << DBObject(answer.first, answer.second).getDataString() << endl;
             }
