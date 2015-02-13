@@ -58,7 +58,7 @@
 #define OUTPUT
 // #define TIME
 
-#include <ctime>
+#include <chrono>
 #include <iostream>
 #include <math.h>
 #include <fstream>
@@ -1071,10 +1071,6 @@ void processQuery() {
 
 #ifdef OUTPUT
             cout << endl << query << " " << key << " " << range << endl;
-#endif
-#ifdef TIME
-            cout << query << " ";
-            start = clock();
 #endif
 #ifdef TIME
             cout << query << " ";
