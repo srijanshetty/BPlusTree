@@ -18,5 +18,6 @@ clean-all: clean-files
 	rm *.o *.out
 
 clean-files:
+	rm -f .tree.session
 	rm leaves/* objects/*
 	touch leaves/DUMMY objects/DUMMY
