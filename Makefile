@@ -21,10 +21,10 @@ clean-all: clean-files
 
 clean-files:
 	rm -f .tree.session
-	rm leaves/* objects/*
+	rm -f leaves/* objects/*
 	touch leaves/DUMMY objects/DUMMY
 
 setup-files:
 	rm -f .tree.session
-	rm leaves/* objects/*
+	rm -f leaves/* objects/*
 	tar xvf data.tar
