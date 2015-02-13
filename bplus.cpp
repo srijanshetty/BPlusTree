@@ -1073,8 +1073,8 @@ int main() {
     // Initialize the BPlusTree module
     Node::initialize();
 
+    // Check if a previous session exists
     ifstream sessionFile(SESSION_FILE);
-
     if (sessionFile.good()) {
         bRoot->loadSession();
     } else {
@@ -1088,7 +1088,7 @@ int main() {
     // Process queries
     // processQuery();
 
-    // Print out information about the root
+    // Store the session
     bRoot->storeSession();
 
     return 0;
