@@ -944,12 +944,16 @@ using namespace BPlusTree;
 
 void buildTree() {
     ifstream ifile;
-    ifile.open("./temp.txt", ios::in);
+    ifile.open("./assgn3_bplus_data.txt", ios::in);
 
     double key;
     string dataString;
     long count = 0;
     while (ifile >> key >> dataString) {
+        if (count % 5000 == 0) {
+            cout << "Inserting " << count << endl;
+        }
+
         // Insert the object into file
         insert(bRoot, DBObject(key, dataString));
 
