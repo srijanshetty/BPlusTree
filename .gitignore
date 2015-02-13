@@ -33,3 +33,6 @@ objects/*
 
 # temp files
 temp.txt
+
+# session files
+.tree.session

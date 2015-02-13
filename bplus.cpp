@@ -193,6 +193,12 @@ namespace BPlusTree {
 
             // Split the current internal Node
             void splitInternal();
+
+            // Store the session to a file
+            void storeSession();
+
+            // Load the session from session file
+            void loadSession();
     };
 
     // Initialize static variables
@@ -223,9 +229,6 @@ namespace BPlusTree {
     }
 
     Node::Node(long _fileIndex) {
-        // Reset the fileCount
-        fileCount = fileCount + 100000;
-
         // Exit if the lowerBoundKey is not defined
         if (lowerBound == 0) {
             cout << "LowerKeyBound not defined";
@@ -275,6 +278,46 @@ namespace BPlusTree {
         }
 
         return keys.size();
+    }
+
+    void Node::storeSession() {
+        // Create a character buffer which will be written to disk
+        long location = 0;
+        char buffer[pageSize];
+
+        // Store root's fileIndex
+        memcpy(buffer + location, &fileIndex, sizeof(fileIndex));
+        location += sizeof(fileIndex);
+
+        // Store the fileCount
+        memcpy(buffer + location, &fileCount, sizeof(fileCount));
+        location += sizeof(fileCount);
+
+        // Create a binary file and write to memory
+        ofstream sessionFile;
+        sessionFile.open(SESSION_FILE, ios::binary|ios::out);
+        sessionFile.write(buffer, pageSize);
+        sessionFile.close();
+    }
+
+    void Node::loadSession() {
+        // Create a character buffer which will be written to disk
+        long location = 0;
+        char buffer[pageSize];
+
+        // Open the binary file ane read into memory
+        ifstream sessionFile;
+        sessionFile.open(SESSION_FILE, ios::binary|ios::in);
+        sessionFile.read(buffer, pageSize);
+        sessionFile.close();
+
+        // Retrieve the fileIndex
+        memcpy((char *) &fileIndex, buffer + location, sizeof(fileIndex));
+        location += sizeof(fileIndex);
+
+        // Retreive the fileCount
+        memcpy((char *) &fileCount, buffer + location, sizeof(fileCount));
+        location += sizeof(fileCount);
     }
 
     void Node::commitToDisk() {
@@ -1030,17 +1073,23 @@ int main() {
     // Initialize the BPlusTree module
     Node::initialize();
 
-    // Create a new tree
-    bRoot = new Node();
+    ifstream sessionFile(SESSION_FILE);
 
-    // Build the tree
-    buildTree();
+    if (sessionFile.good()) {
+        bRoot->loadSession();
+    } else {
+        // Create a new tree
+        bRoot = new Node();
+
+        // Build the tree
+        buildTree();
+    }
 
     // Process queries
     // processQuery();
 
     // Print out information about the root
-    bRoot->printNode();
+    bRoot->storeSession();
 
     return 0;
 }
