@@ -8,6 +8,8 @@ all: tree.out
 
 fresh: tree.out clean-files
 
+old: tree.out setup-files
+
 tree.out: bplus.o
 	$(CC) $(DEBUG) bplus.o -o tree.out
 
@@ -21,3 +23,8 @@ clean-files:
 	rm -f .tree.session
 	rm leaves/* objects/*
 	touch leaves/DUMMY objects/DUMMY
+
+setup-files:
+	rm -f .tree.session
+	rm leaves/* objects/*
+	tar xvf data.tar

@@ -37,3 +37,6 @@ temp.query
 
 # session files
 .tree.session
+
+# Data backup
+!data.tar
