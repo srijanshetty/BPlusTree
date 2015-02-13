@@ -55,8 +55,8 @@
 // #define DEBUG_NORMAL
 
 // Two modes of running the program, either time it or show output
-// #define OUTPUT
-#define TIME
+#define OUTPUT
+// #define TIME
 
 #include <chrono>
 #include <iostream>
