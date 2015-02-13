@@ -370,10 +370,10 @@ namespace BPlusTree {
         }
 
         // Create a binary file and write to memory
-        ofstream leafFile;
-        leafFile.open(getFileName(), ios::binary|ios::out);
-        leafFile.write(buffer, pageSize);
-        leafFile.close();
+        ofstream nodeFile;
+        nodeFile.open(getFileName(), ios::binary|ios::out);
+        nodeFile.write(buffer, pageSize);
+        nodeFile.close();
     }
 
     void Node::readFromDisk() {
@@ -382,10 +382,10 @@ namespace BPlusTree {
         char buffer[pageSize];
 
         // Open the binary file ane read into memory
-        ifstream leafFile;
-        leafFile.open(getFileName(), ios::binary|ios::in);
-        leafFile.read(buffer, pageSize);
-        leafFile.close();
+        ifstream nodeFile;
+        nodeFile.open(getFileName(), ios::binary|ios::in);
+        nodeFile.read(buffer, pageSize);
+        nodeFile.close();
 
         // Retrieve the fileIndex
         memcpy((char *) &fileIndex, buffer + location, sizeof(fileIndex));
