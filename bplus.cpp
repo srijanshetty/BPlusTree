@@ -318,6 +318,9 @@ namespace BPlusTree {
         // Retreive the fileCount
         memcpy((char *) &fileCount, buffer + location, sizeof(fileCount));
         location += sizeof(fileCount);
+
+        // Read contents from disk
+        readFromDisk();
     }
 
     void Node::commitToDisk() {
@@ -1073,15 +1076,14 @@ int main() {
     // Initialize the BPlusTree module
     Node::initialize();
 
-    // Check if a previous session exists
+    // Create a new tree
+    bRoot = new Node();
+
+    // Load session or build a new tree
     ifstream sessionFile(SESSION_FILE);
     if (sessionFile.good()) {
         bRoot->loadSession();
     } else {
-        // Create a new tree
-        bRoot = new Node();
-
-        // Build the tree
         buildTree();
     }
 
