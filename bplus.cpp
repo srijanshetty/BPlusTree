@@ -1006,7 +1006,9 @@ void buildTree() {
     long count = 0;
     while (ifile >> key >> dataString) {
         if (count % 5000 == 0) {
+#ifdef OUTPUT
             cout << "Inserting " << count << endl;
+#endif
         }
 
         // Insert the object into file
