@@ -58,6 +58,7 @@
 #define OUTPUT
 // #define TIME
 
+#include <ctime>
 #include <iostream>
 #include <math.h>
 #include <fstream>
@@ -1023,6 +1024,11 @@ void processQuery() {
     ifstream ifile;
     ifile.open("./assgn3_bplus_querysample.txt", ios::in);
 
+#ifdef TIME
+    // To time functions
+    clock_t start;
+#endif
+
     long query;
     while (ifile >> query) {
         if (query == 0) {
@@ -1030,49 +1036,84 @@ void processQuery() {
             string dataString;
             ifile >> key >> dataString;
 
-            // Insert into the database
 #ifdef OUTPUT
             cout << endl << query << " " << key << " " << dataString << endl;
 #endif
+#ifdef TIME
+            cout << query << " ";
+            start = clock();
+#endif
+            // Insert into the database
             insert(bRoot, DBObject(key, dataString));
+#ifdef TIME
+            cout << (clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
+#endif
         } else if (query == 1) {
             double key;
             ifile >> key;
 
-            // pointQuery
 #ifdef OUTPUT
             cout << endl << query << " " << key << endl;
 #endif
+#ifdef TIME
+            cout << query << " ";
+            start = clock();
+#endif
+            // pointQuery
             pointQuery(bRoot, key);
+#ifdef TIME
+            cout << (clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
+#endif
         } else if (query == 2) {
             double key, range;
             ifile >> key >> range;
 
-            // rangeQuery
 #ifdef OUTPUT
             cout << endl << query << " " << key << " " << range << endl;
 #endif
+#ifdef TIME
+            cout << query << " ";
+            start = clock();
+#endif
+            // rangeQuery
             rangeQuery(bRoot, key, range * 0.1);
+#ifdef TIME
+            cout << (clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
+#endif
         } else if (query == 3) {
             double key;
             long k;
             ifile >> key >> k;
 
-            // kNNQuery
 #ifdef OUTPUT
             cout << endl << query << " " << key << " " << k << endl;
 #endif
+#ifdef TIME
+            cout << query << " ";
+            start = clock();
+#endif
+            // kNNQuery
             kNNQuery(bRoot, key, k);
+#ifdef TIME
+            cout << (clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
+#endif
         } else if (query == 4) {
             double lowerLimit;
             double upperLimit;
             ifile >> lowerLimit >> upperLimit;
 
-            // windowQuery
 #ifdef OUTPUT
             cout << endl << query << " " << lowerLimit << " " << upperLimit << endl;
 #endif
+#ifdef TIME
+            cout << query << " ";
+            start = clock();
+#endif
+            // windowQuery
             windowQuery(bRoot, lowerLimit, upperLimit);
+#ifdef TIME
+            cout << (clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
+#endif
         }
     }
 
