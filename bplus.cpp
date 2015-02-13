@@ -252,9 +252,6 @@ namespace BPlusTree {
         long nodeSize = sizeof(fileIndex);
         long keySize = sizeof(keyType);
         lowerBound = floor((pageSize - nodeSize) / (2 * (keySize + nodeSize)));
-
-        // TODO : Change this back to default
-        lowerBound = 2;
         upperBound = 2 * lowerBound;
         pageSize = pageSize + headerSize;
     }
