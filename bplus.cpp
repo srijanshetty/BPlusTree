@@ -43,17 +43,17 @@
    2. If a function modifies the Node, it saves it back to disk
    */
 
-
-
 // Configuration parameters
 #define CONFIG_FILE "./bplustree.config"
+#define SESSION_FILE "./.tree.session"
 
 // Constants
 #define TREE_PREFIX "leaves/leaf_"
 #define OBJECT_FILE "objects/objectFile"
 #define DEFAULT_LOCATION -1
-// #define DEBUG
-// #define TEST
+// #define DEBUG_VERBOSE
+// #define DEBUG_NORMAL
+#define OUTPUT
 
 #include <iostream>
 #include <math.h>
@@ -497,7 +497,7 @@ namespace BPlusTree {
         // commit changes to disk
         commitToDisk();
 
-#ifdef DEBUG
+#ifdef DEBUG_VERBOSE
         cout << endl;
         cout << "InsertNode : " << endl;
         cout << "Base Node : ";
@@ -536,7 +536,7 @@ namespace BPlusTree {
     }
 
     void Node::splitInternal() {
-#ifdef DEBUG
+#ifdef DEBUG_VERBOSE
         cout << endl;
         cout << "SplitInternal : " << endl;
         cout << "Base Node : ";
@@ -559,7 +559,7 @@ namespace BPlusTree {
         // Resize the keys of the current node
         keys.resize(lowerBound);
 
-#ifdef DEBUG
+#ifdef DEBUG_VERBOSE
         // Print them out
         cout << "First InternalNode : ";
         for (auto key : keys) {
@@ -634,7 +634,7 @@ namespace BPlusTree {
     }
 
     void Node::splitLeaf() {
-#ifdef DEBUG
+#ifdef DEBUG_VERBOSE
         cout << endl;
         cout << "SplitLeaf : " << endl;
         cout << "Base Node : ";
@@ -656,7 +656,7 @@ namespace BPlusTree {
         keys.resize(lowerBound);
         objectPointers.resize(lowerBound);
 
-#ifdef DEBUG
+#ifdef DEBUG_VERBOSE
         // Print them out
         cout << "First Leaf : ";
         for (auto key : keys) {
@@ -742,7 +742,7 @@ namespace BPlusTree {
                 root->splitLeaf();
             }
 
-#ifdef DEBUG
+#ifdef DEBUG_VERBOSE
             // Serialize
             bRoot->serialize();
 #endif
@@ -768,7 +768,7 @@ namespace BPlusTree {
             // Print all nodes in the current leaf
             for (long i = 0; i < (long) root->keys.size(); ++i) {
                 if (root->keys[i] == searchKey) {
-#ifdef TEST
+#ifdef DEBUG_NORMAL
                     cout << root->keys[i] << " ";
 #endif
                     cout << DBObject(root->keys[i], root->objectPointers[i]).getDataString() << endl;
@@ -809,7 +809,7 @@ namespace BPlusTree {
             // Print all nodes in the current leaf which satisfy the criteria
             for (long i = 0; i < (long) root->keys.size(); ++i) {
                 if (root->keys[i] >= lowerLimit && root->keys[i] <= upperLimit) {
-#ifdef TEST
+#ifdef DEBUG_NORMAL
                     cout << root->keys[i] << " ";
 #endif
                     cout << DBObject(root->keys[i], root->objectPointers[i]).getDataString() << endl;
@@ -909,7 +909,7 @@ namespace BPlusTree {
             pair <double, long> answer;
             for (long i = 0; i < k && i < (long) answers.size(); ++i) {
                 answer = answers[i];
-#ifdef TEST
+#ifdef DEBUG_NORMAL
                 cout << answer.first << " ";
 #endif
                 cout << DBObject(answer.first, answer.second).getDataString() << endl;
@@ -1012,7 +1012,7 @@ int main() {
     // Build the tree
     buildTree();
 
-#ifdef TEST
+#ifdef DEBUG_NORMAL
     // Print the tree
     bRoot->serialize();
 #endif
@@ -1021,9 +1021,7 @@ int main() {
     processQuery();
 
     // Print out information about the root
-#ifdef TEST
     bRoot->printNode();
-#endif
 
     return 0;
 }
