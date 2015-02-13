@@ -6,9 +6,9 @@ DEBUG=-g
 
 all: tree.out
 
-fresh: tree.out clean-files
+build: tree.out clean-files
 
-old: tree.out setup-files
+restore: tree.out setup-files
 
 tree.out: bplus.o
 	$(CC) $(DEBUG) bplus.o -o tree.out
