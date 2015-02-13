@@ -53,7 +53,10 @@
 #define DEFAULT_LOCATION -1
 // #define DEBUG_VERBOSE
 // #define DEBUG_NORMAL
+
+// Two modes of running the program, either time it or show output
 #define OUTPUT
+// #define TIME
 
 #include <iostream>
 #include <math.h>
@@ -771,7 +774,9 @@ namespace BPlusTree {
 #ifdef DEBUG_NORMAL
                     cout << root->keys[i] << " ";
 #endif
+#ifdef OUTPUT
                     cout << DBObject(root->keys[i], root->objectPointers[i]).getDataString() << endl;
+#endif
                 }
             }
 
@@ -812,7 +817,9 @@ namespace BPlusTree {
 #ifdef DEBUG_NORMAL
                     cout << root->keys[i] << " ";
 #endif
+#ifdef OUTPUT
                     cout << DBObject(root->keys[i], root->objectPointers[i]).getDataString() << endl;
+#endif
                 }
             }
 
@@ -912,7 +919,10 @@ namespace BPlusTree {
 #ifdef DEBUG_NORMAL
                 cout << answer.first << " ";
 #endif
+#ifdef OUTPUT
                 cout << DBObject(answer.first, answer.second).getDataString() << endl;
+#endif
+
             }
         } else {
             // We traverse the tree
@@ -963,21 +973,27 @@ void processQuery() {
             ifile >> key >> dataString;
 
             // Insert into the database
+#ifdef OUTPUT
             cout << endl << query << " " << key << " " << dataString << endl;
+#endif
             insert(bRoot, DBObject(key, dataString));
         } else if (query == 1) {
             double key;
             ifile >> key;
 
             // pointQuery
+#ifdef OUTPUT
             cout << endl << query << " " << key << endl;
+#endif
             pointQuery(bRoot, key);
         } else if (query == 2) {
             double key, range;
             ifile >> key >> range;
 
             // rangeQuery
+#ifdef OUTPUT
             cout << endl << query << " " << key << " " << range << endl;
+#endif
             rangeQuery(bRoot, key, range * 0.1);
         } else if (query == 3) {
             double key;
@@ -985,7 +1001,9 @@ void processQuery() {
             ifile >> key >> k;
 
             // kNNQuery
+#ifdef OUTPUT
             cout << endl << query << " " << key << " " << k << endl;
+#endif
             kNNQuery(bRoot, key, k);
         } else if (query == 4) {
             double lowerLimit;
@@ -993,7 +1011,9 @@ void processQuery() {
             ifile >> lowerLimit >> upperLimit;
 
             // windowQuery
+#ifdef OUTPUT
             cout << endl << query << " " << lowerLimit << " " << upperLimit << endl;
+#endif
             windowQuery(bRoot, lowerLimit, upperLimit);
         }
     }
@@ -1012,13 +1032,8 @@ int main() {
     // Build the tree
     buildTree();
 
-#ifdef DEBUG_NORMAL
-    // Print the tree
-    bRoot->serialize();
-#endif
-
     // Process queries
-    processQuery();
+    // processQuery();
 
     // Print out information about the root
     bRoot->printNode();
