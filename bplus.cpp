@@ -1026,11 +1026,6 @@ void processQuery() {
     ifstream ifile;
     ifile.open("./assgn3_bplus_querysample.txt", ios::in);
 
-#ifdef TIME
-    // To time functions
-    clock_t start;
-#endif
-
     long query;
     while (ifile >> query) {
         if (query == 0) {
@@ -1043,12 +1038,14 @@ void processQuery() {
 #endif
 #ifdef TIME
             cout << query << " ";
-            start = clock();
+            auto start = std::chrono::high_resolution_clock::now();
 #endif
             // Insert into the database
             insert(bRoot, DBObject(key, dataString));
 #ifdef TIME
-            cout << (clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
+            auto elapsed = std::chrono::high_resolution_clock::now() - start;
+            long long microseconds = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
+            cout << microseconds << endl;
 #endif
         } else if (query == 1) {
             double key;
@@ -1059,12 +1056,14 @@ void processQuery() {
 #endif
 #ifdef TIME
             cout << query << " ";
-            start = clock();
+            auto start = std::chrono::high_resolution_clock::now();
 #endif
             // pointQuery
             pointQuery(bRoot, key);
 #ifdef TIME
-            cout << (clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
+            auto elapsed = std::chrono::high_resolution_clock::now() - start;
+            long long microseconds = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
+            cout << microseconds << endl;
 #endif
         } else if (query == 2) {
             double key, range;
@@ -1077,10 +1076,16 @@ void processQuery() {
             cout << query << " ";
             start = clock();
 #endif
+#ifdef TIME
+            cout << query << " ";
+            auto start = std::chrono::high_resolution_clock::now();
+#endif
             // rangeQuery
             rangeQuery(bRoot, key, range * 0.1);
 #ifdef TIME
-            cout << (clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
+            auto elapsed = std::chrono::high_resolution_clock::now() - start;
+            long long microseconds = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
+            cout << microseconds << endl;
 #endif
         } else if (query == 3) {
             double key;
@@ -1092,12 +1097,14 @@ void processQuery() {
 #endif
 #ifdef TIME
             cout << query << " ";
-            start = clock();
+            auto start = std::chrono::high_resolution_clock::now();
 #endif
             // kNNQuery
             kNNQuery(bRoot, key, k);
 #ifdef TIME
-            cout << (clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
+            auto elapsed = std::chrono::high_resolution_clock::now() - start;
+            long long microseconds = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
+            cout << microseconds << endl;
 #endif
         } else if (query == 4) {
             double lowerLimit;
@@ -1109,12 +1116,14 @@ void processQuery() {
 #endif
 #ifdef TIME
             cout << query << " ";
-            start = clock();
+            auto start = std::chrono::high_resolution_clock::now();
 #endif
             // windowQuery
             windowQuery(bRoot, lowerLimit, upperLimit);
 #ifdef TIME
-            cout << (clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
+            auto elapsed = std::chrono::high_resolution_clock::now() - start;
+            long long microseconds = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
+            cout << microseconds << endl;
 #endif
         }
     }
