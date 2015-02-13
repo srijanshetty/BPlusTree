@@ -87,6 +87,8 @@ namespace BPlusTree {
             double key;
             long fileIndex;
             string dataString;
+
+        public:
             static long objectCount;
 
         public:
@@ -121,10 +123,8 @@ namespace BPlusTree {
     long DBObject::objectCount = 0;
 
     class Node {
-        private:
-            static long fileCount;              // Count of all files
-
         public:
+            static long fileCount;              // Count of all files
             static long lowerBound;
             static long upperBound;
             static long pageSize;
@@ -193,12 +193,6 @@ namespace BPlusTree {
 
             // Split the current internal Node
             void splitInternal();
-
-            // Store the session to a file
-            void storeSession();
-
-            // Load the session from session file
-            void loadSession();
     };
 
     // Initialize static variables
@@ -278,49 +272,6 @@ namespace BPlusTree {
         }
 
         return keys.size();
-    }
-
-    void Node::storeSession() {
-        // Create a character buffer which will be written to disk
-        long location = 0;
-        char buffer[pageSize];
-
-        // Store root's fileIndex
-        memcpy(buffer + location, &fileIndex, sizeof(fileIndex));
-        location += sizeof(fileIndex);
-
-        // Store the fileCount
-        memcpy(buffer + location, &fileCount, sizeof(fileCount));
-        location += sizeof(fileCount);
-
-        // Create a binary file and write to memory
-        ofstream sessionFile;
-        sessionFile.open(SESSION_FILE, ios::binary|ios::out);
-        sessionFile.write(buffer, pageSize);
-        sessionFile.close();
-    }
-
-    void Node::loadSession() {
-        // Create a character buffer which will be written to disk
-        long location = 0;
-        char buffer[pageSize];
-
-        // Open the binary file ane read into memory
-        ifstream sessionFile;
-        sessionFile.open(SESSION_FILE, ios::binary|ios::in);
-        sessionFile.read(buffer, pageSize);
-        sessionFile.close();
-
-        // Retrieve the fileIndex
-        memcpy((char *) &fileIndex, buffer + location, sizeof(fileIndex));
-        location += sizeof(fileIndex);
-
-        // Retreive the fileCount
-        memcpy((char *) &fileCount, buffer + location, sizeof(fileCount));
-        location += sizeof(fileCount);
-
-        // Read contents from disk
-        readFromDisk();
     }
 
     void Node::commitToDisk() {
@@ -984,6 +935,66 @@ namespace BPlusTree {
             delete nextRoot;
         }
     }
+
+    void storeSession() {
+        // Create a character buffer which will be written to disk
+        long location = 0;
+        char buffer[Node::pageSize];
+
+        // Store root's fileIndex
+        long fileIndex = bRoot->getFileIndex();
+        memcpy(buffer + location, &fileIndex, sizeof(fileIndex));
+        location += sizeof(fileIndex);
+
+        // Store the fileCount
+        memcpy(buffer + location, &Node::fileCount, sizeof(Node::fileCount));
+        location += sizeof(Node::fileCount);
+
+        // Store the objectCount for DBObject
+        memcpy(buffer + location, &DBObject::objectCount, sizeof(DBObject::objectCount));
+        location += sizeof(DBObject::objectCount);
+
+        // Create a binary file and write to memory
+        ofstream sessionFile;
+        sessionFile.open(SESSION_FILE, ios::binary|ios::out);
+        sessionFile.write(buffer, Node::pageSize);
+        sessionFile.close();
+    }
+
+    void loadSession() {
+        // Create a character buffer which will be written to disk
+        long location = 0;
+        char buffer[Node::pageSize];
+
+        // Open the binary file ane read into memory
+        ifstream sessionFile;
+        sessionFile.open(SESSION_FILE, ios::binary|ios::in);
+        sessionFile.read(buffer, Node::pageSize);
+        sessionFile.close();
+
+        // Retrieve the fileIndex
+        long fileIndex;
+        memcpy((char *) &fileIndex, buffer + location, sizeof(fileIndex));
+        location += sizeof(fileIndex);
+
+        // Retreive the fileCount
+        long fileCount;
+        memcpy((char *) &fileCount, buffer + location, sizeof(fileCount));
+        location += sizeof(fileCount);
+
+        // Retrieve the objectCount
+        long objectCount;
+        memcpy((char *) &objectCount, buffer + location, sizeof(objectCount));
+        location += sizeof(objectCount);
+
+        // Store the session variables
+        Node::fileCount = fileCount;
+        DBObject::objectCount = objectCount;
+
+        delete bRoot;
+        bRoot = new Node(fileIndex);
+        bRoot->readFromDisk();
+    }
 }
 
 using namespace BPlusTree;
@@ -1013,7 +1024,7 @@ void buildTree() {
 
 void processQuery() {
     ifstream ifile;
-    ifile.open("./temp.query", ios::in);
+    ifile.open("./assgn3_bplus_querysample.txt", ios::in);
 
     long query;
     while (ifile >> query) {
@@ -1082,7 +1093,7 @@ int main() {
     // Load session or build a new tree
     ifstream sessionFile(SESSION_FILE);
     if (sessionFile.good()) {
-        bRoot->loadSession();
+        loadSession();
     } else {
         buildTree();
     }
@@ -1091,7 +1102,7 @@ int main() {
     // processQuery();
 
     // Store the session
-    bRoot->storeSession();
+    storeSession();
 
     return 0;
 }
