@@ -999,7 +999,7 @@ using namespace BPlusTree;
 
 void buildTree() {
     ifstream ifile;
-    ifile.open("./assgn3_bplus_data.txt", ios::in);
+    ifile.open("./assgn2_bplus_data.txt", ios::in);
 
     double key;
     string dataString;
@@ -1024,7 +1024,7 @@ void buildTree() {
 
 void processQuery() {
     ifstream ifile;
-    ifile.open("./assgn3_bplus_querysample.txt", ios::in);
+    ifile.open("./querysample.txt", ios::in);
 
     long query;
     while (ifile >> query) {

@@ -6,7 +6,7 @@ DEBUG=-g
 
 all: tree.out
 
-build: tree.out clean-files
+fresh: tree.out clean-files
 
 restore: tree.out setup-files
 
