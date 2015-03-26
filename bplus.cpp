@@ -1143,11 +1143,11 @@ int main() {
         buildTree();
     }
 
-    // Process queries
-    processQuery();
-
     // Store the session
     storeSession();
+
+    // Process queries
+    processQuery();
 
     return 0;
 }
